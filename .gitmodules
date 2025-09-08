@@ -1,0 +1,3 @@
+[submodule "fly_easy"]
+	path = fly_easy
+	url = https://github.com/mostafaahmedbahr/fly_easy.git

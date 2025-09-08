@@ -1,0 +1,4 @@
+class PayMobConstants{
+  static const payMobApiKey = "ZXlKaGJHY2lPaUpJVXpVeE1pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SmpiR0Z6Y3lJNklrMWxjbU5vWVc1MElpd2ljSEp2Wm1sc1pWOXdheUk2T1RVd01qRTBMQ0p1WVcxbElqb2lhVzVwZEdsaGJDSjkuV3BOUWRNajBINERRbXNXdFFxRlNKRWRzSy1xaXVPZDRHOFNBc2RZZlBxLUMwQzFOY0IyaGJUdExlVjNpcjZvQ1MyQklva1JWN2xQWTNLeVpUdmsxT3c=";
+  static const paymentIntegrationId = 4429570;
+}

@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "598254904473",
+    "project_id": "teams-layered",
+    "storage_bucket": "teams-layered.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:598254904473:android:bc7ce705781b7ab390c408",
+        "android_client_info": {
+          "package_name": "io.flyeasy.teams"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "598254904473-h8ot2l4e3ecdpe90do2mbfkb57vhbd1a.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBYH2qOpjQ29Tw3zWUe_zunPCzXVRiYcYM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "598254904473-h8ot2l4e3ecdpe90do2mbfkb57vhbd1a.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

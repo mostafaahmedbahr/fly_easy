@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CADisableMinimumFrameDurationOnPhone</key>
+    <true/>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>$(DEVELOPMENT_LANGUAGE)</string>
+    <key>CFBundleDisplayName</key>
+	<string>Teams Link</string>
+    <key>CFBundleExecutable</key>
+    <string>$(EXECUTABLE_NAME)</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.flyEasy.teamLayered</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleLocalizations</key>
+    <array>
+        <string>en</string>
+        <string>ar</string>
+        <string>es</string>
+        <string>de</string>
+        <string>fr</string>
+    </array>
+    <key>CFBundleName</key>
+	<string>Teams Link</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0.4</string> <!-- Updated version number -->
+    <key>CFBundleSignature</key>
+    <string>????</string>
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>com.googleusercontent.apps.598254904473-d8mhbr40316mq8eqg76hstlgehnnf6ua</string>
+            </array>
+        </dict>
+        <dict>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>app-1-598254904473-ios-e007807be409019c90c408</string>
+            </array>
+        </dict>
+        <dict>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>CFBundleURLName</key>
+            <string>BUNDLE Id</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>com.flyEasy.teamLayered</string>
+            </array>
+        </dict>
+        <dict>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>ShareMedia-$(PRODUCT_BUNDLE_IDENTIFIER)</string> <!-- Added entry -->
+            </array>
+        </dict>
+    </array>
+    <key>CFBundleVersion</key>
+    <string>12</string> <!-- Updated build number -->
+    <key>GADApplicationIdentifier</key>
+    <string>ca-app-pub-8718188273675259~5095938995</string>
+    <key>LSApplicationQueriesSchemes</key>
+    <array>
+        <string>https</string>
+        <string>mailto</string>
+    </array>
+    <key>LSRequiresIPhoneOS</key>
+    <true/>
+    <key>LSSupportsOpeningDocumentsInPlace</key>
+    <true/>
+    <key>NSCameraUsageDescription</key>
+    <string>This app needs camera access to scan QR codes to add users to teams.</string>
+    <key>NSContactsUsageDescription</key>
+    <string>This app requires contacts access to share contacts in the chat.</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>This app needs access to location when open to enable the user to share the current location in the chat.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>This app requires Mic permission to record a voice in the chat.</string>
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>This app needs photos access to save photos and videos from chat in gallery.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>This app needs photos access to share photos in the chat and to change profile image.</string>
+    <key>UIApplicationSupportsIndirectInputEvents</key>
+    <true/>
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>audio</string>
+        <string>fetch</string>
+        <string>processing</string>
+        <string>remote-notification</string>
+        <string>voip</string>
+        <string>push-to-talk</string> <!-- Added push-to-talk -->
+    </array>
+    <key>UIFileSharingEnabled</key>
+    <true/>
+    <key>UILaunchStoryboardName</key>
+    <string>LaunchScreen</string>
+    <key>UIMainStoryboardFile</key>
+    <string>Main</string>
+    <key>UIStatusBarHidden</key>
+    <false/>
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
+    <key>UISupportedInterfaceOrientations~ipad</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationPortraitUpsideDown</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
+    <key>UISupportsDocumentBrowser</key>
+    <true/>
+    <key>io.flutter.embedded_views_preview</key>
+    <true/>
+    <key>FirebaseAppDelegateProxyEnabled</key>
+    <false/>
+    <key>BGTaskSchedulerPermittedIdentifiers</key>
+    <array>
+        <string>com.flyEasy.teamLayered.backgroundTask</string> <!-- Add your task identifier here -->
+    </array>
+    <key>AppGroupId</key> <!-- Added key -->
+    <string>$(CUSTOM_GROUP_ID)</string> <!-- Added value -->
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>ShareMedia-$(PRODUCT_BUNDLE_IDENTIFIER)</string> <!-- Added entry -->
+            </array>
+        </dict>
+    </array>
+    <key>NSPhotoLibraryUsageDescription</key> <!-- Updated description -->
+    <string>To upload photos, please allow permission to access your photo library.</string>
+</dict>
+</plist>
