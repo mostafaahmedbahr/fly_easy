@@ -8,8 +8,8 @@
 	<true/>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.com.flyEasy.teamLayered.ShareExtension</string>
-		<string>group.com.flyEasy.teamLayered</string>
+		<string>group.com.flyEasy.teamsapp.ShareExtension</string>
+		<string>group.com.flyEasy.teamsapp</string>
 	</array>
 </dict>
 </plist>

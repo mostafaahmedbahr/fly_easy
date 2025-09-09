@@ -11,7 +11,7 @@
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
-    <string>com.flyEasy.teamLayered</string>
+    <string>com.flyEasy.teamsapp</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleLocalizations</key>
@@ -55,7 +55,7 @@
             <string>BUNDLE Id</string>
             <key>CFBundleURLSchemes</key>
             <array>
-                <string>com.flyEasy.teamLayered</string>
+                <string>com.flyEasy.teamsapp</string>
             </array>
         </dict>
         <dict>
@@ -132,7 +132,7 @@
     <false/>
     <key>BGTaskSchedulerPermittedIdentifiers</key>
     <array>
-        <string>com.flyEasy.teamLayered.backgroundTask</string> <!-- Add your task identifier here -->
+        <string>com.flyEasy.teamsapp.backgroundTask</string> <!-- Add your task identifier here -->
     </array>
     <key>AppGroupId</key> <!-- Added key -->
     <string>$(CUSTOM_GROUP_ID)</string> <!-- Added value -->

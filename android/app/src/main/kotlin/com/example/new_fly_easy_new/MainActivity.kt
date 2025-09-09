@@ -1,4 +1,4 @@
-package io.flyeasy.teams
+package io.flyeasy.teamsapp
 
 import io.flutter.embedding.android.FlutterActivity
 
