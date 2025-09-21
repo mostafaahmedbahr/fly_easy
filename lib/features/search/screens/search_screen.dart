@@ -16,7 +16,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 
 class SearchScreen extends StatefulWidget {
-  const SearchScreen({Key? key}) : super(key: key);
+  const SearchScreen({super.key});
 
   @override
   State<SearchScreen> createState() => _SearchScreenState();
@@ -64,8 +64,8 @@ class _SearchScreenState extends State<SearchScreen>
           child: Column(
             children: [
               TabBarWidget(tabController: _tabController, tabs: [
+                Tab(child: Text(LocaleKeys.members.tr())),
                 Tab(child: Text(LocaleKeys.teams.tr())),
-                Tab(child: Text(LocaleKeys.members.tr()))
               ]),
               Expanded(
                   child: TabBarView(

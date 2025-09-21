@@ -11,7 +11,7 @@ import 'package:new_fly_easy_new/features/widgets/terms_and_conditions_dialog.da
 import 'package:new_fly_easy_new/translations/locale_keys.g.dart';
 
 class WelcomeScreen extends StatefulWidget {
-  const WelcomeScreen({Key? key}) : super(key: key);
+  const WelcomeScreen({super.key});
 
   @override
   State<WelcomeScreen> createState() => _WelcomeScreenState();

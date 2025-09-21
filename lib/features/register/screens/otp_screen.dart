@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +22,7 @@ import 'package:new_fly_easy_new/translations/locale_keys.g.dart';
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 import 'package:zego_uikit_signaling_plugin/zego_uikit_signaling_plugin.dart';
 import "package:zego_uikit/src/components/audio_video_container/layout.dart";
+
 class OtpScreen extends StatefulWidget {
   const OtpScreen({Key? key, required this.email}) : super(key: key);
   final String email;
@@ -33,6 +36,43 @@ class _OtpScreenState extends State<OtpScreen> {
   final TextEditingController _controller = TextEditingController();
   GlobalKey<FormState> formKey = GlobalKey<FormState>();
   late String otp;
+
+  // Timer variables
+  late int _countdown;
+  late Timer _timer;
+  bool _showResendButton = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _startCountdown();
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  void _startCountdown() {
+    setState(() {
+      _countdown = 30;
+      _showResendButton = false;
+    });
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_countdown > 0) {
+        setState(() {
+          _countdown--;
+        });
+      } else {
+        setState(() {
+          _showResendButton = true;
+        });
+        timer.cancel();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,23 +115,24 @@ class _OtpScreenState extends State<OtpScreen> {
                   BlocBuilder<OtpCubit, OtpState>(
                     builder: (context, state) => cubit.isActiveButton
                         ? CustomButton(
-                            width: double.infinity,
-                            onPress: () async {
-                              formKey.currentState!.save();
-                              await cubit.submitOtp(otp);
-                            },
-                            buttonType: 1,
-                            child: state is SubmitOtpLoad
-                                ? const MyProgress(
-                                    color: Colors.white,
-                                  )
-                                : ButtonText(title: LocaleKeys.verify.tr()))
+                        width: double.infinity,
+                        onPress: () async {
+                          formKey.currentState!.save();
+                          await cubit.submitOtp(otp);
+                        },
+                        buttonType: 1,
+                        child: state is SubmitOtpLoad
+                            ? const MyProgress(
+                          color: Colors.white,
+                        )
+                            : ButtonText(title: LocaleKeys.verify.tr()))
                         : InactiveButton(
-                            width: double.infinity,
-                            title: ButtonText(
-                              title: LocaleKeys.verify.tr(),
-                            )),
+                        width: double.infinity,
+                        title: ButtonText(
+                          title: LocaleKeys.verify.tr(),
+                        )),
                   ),
+                  SizedBox(height: 10.h),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
@@ -105,9 +146,11 @@ class _OtpScreenState extends State<OtpScreen> {
                           height: 0.10,
                         ),
                       ),
-                      TextButton(
+                      _showResendButton
+                          ? TextButton(
                           onPressed: () {
                             cubit.resendOtp(widget.email);
+                            _startCountdown(); // Restart the timer after resend
                           },
                           child: Text(
                             LocaleKeys.resend_otp.tr(),
@@ -119,6 +162,16 @@ class _OtpScreenState extends State<OtpScreen> {
                               height: 0.10,
                             ),
                           ))
+                          : Text(
+                        ' (${_countdown}s)',
+                        style: const TextStyle(
+                          color: Color(0xFF3A4053),
+                          fontSize: 15.32,
+                          fontFamily: AppFonts.poppins,
+                          fontWeight: FontWeight.w400,
+                          height: 0.10,
+                        ),
+                      )
                     ],
                   )
                 ],
@@ -137,14 +190,11 @@ class _OtpScreenState extends State<OtpScreen> {
   void _blocListener(BuildContext context, OtpState state) {
     if (state is SubmitOtpSuccess) {
       ZegoUIKitPrebuiltCallInvitationService().init(
-
         appID:  1812799240/*input your AppID*/,
         appSign: 'f053c726dd8a0d08b2e7183517d8b26d3e7626193c0a72906f722ddd2339c82a' /*input your AppSign*/,
         userID: HiveUtils.getUserData()!.id.toString(),
         userName:HiveUtils.getUserData()!.name,
-        // controller: zegoUIKitPrebuiltCallController,
-        plugins: [ZegoUIKitSignalingPlugin(),],
-        // notifyWhenAppRunningInBackgroundOrQuit: true,
+        plugins: [ZegoUIKitSignalingPlugin()],
         ringtoneConfig:  ZegoCallRingtoneConfig(
           incomingCallPath: "assets/sounds/ringTone.mp3",
           outgoingCallPath: "assets/sounds/ringTone.mp3",
@@ -157,7 +207,6 @@ class _OtpScreenState extends State<OtpScreen> {
               : ZegoCallInvitationType.videoCall == data.type
               ? ZegoUIKitPrebuiltCallConfig.oneOnOneVideoCall()
               : ZegoUIKitPrebuiltCallConfig.oneOnOneVoiceCall();
-          // Modify your custom configurations here.
           config.layout = ZegoLayout.gallery(
             addBorderRadiusAndSpacingBetweenView: false,
           );

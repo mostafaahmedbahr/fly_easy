@@ -119,7 +119,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: Text(
                               LocaleKeys.forget_your_password.tr(),
                               style: TextStyle(
-                                  color: AppColors.hintTextColor,
+                                  color: AppColors.bodyMedium,
                                   fontFamily: AppFonts.lato,
                                   fontSize: 16.sp,
                                   fontWeight: FontWeight.w400),

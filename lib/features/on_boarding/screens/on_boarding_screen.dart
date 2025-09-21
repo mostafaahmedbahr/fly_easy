@@ -8,7 +8,7 @@ import 'package:new_fly_easy_new/features/on_boarding/widgets/customPage.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class OnBoardingScreen extends StatefulWidget {
-  const OnBoardingScreen({Key? key}) : super(key: key);
+  const OnBoardingScreen({super.key});
 
   @override
   State<OnBoardingScreen> createState() => _OnBoardingScreenState();
@@ -101,7 +101,7 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
 
   final List<Widget> _onBoardingPages = [
     const CustomPage(
-        title: 'Welcome to FlyEasy.',
+        title: 'Welcome to TeamsApp.',
         image: AppImages.onBoarding1,
         description:
             'Teams is a mobile app that revolutionizes how companies work. \nTeams is a smart and easy way to improve your business performance and communication.'),
