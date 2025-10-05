@@ -14,7 +14,7 @@ import 'package:showcaseview/showcaseview.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SearchMemberWidget extends StatefulWidget {
-  const SearchMemberWidget({Key? key, required this.member,required this.index}) : super(key: key);
+  const SearchMemberWidget({super.key, required this.member,required this.index});
   final MemberModel member;
   final int index;
 
@@ -101,6 +101,7 @@ class _SearchMemberWidgetState extends State<SearchMemberWidget> {
           id: widget.member.id,
           image: widget.member.image,
           name: widget.member.name,
+
           isTeam: false,
         ));
   }

@@ -184,8 +184,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           children: [
                             Text(
                               LocaleKeys.do_not_have_account.tr(),
-                              style: themeData.textTheme.labelSmall!
-                                  .copyWith(fontFamily: AppFonts.lato),
+                              style: TextStyle(
+                                  color: AppColors.bodyMedium,
+                                  fontFamily: AppFonts.lato,
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.w400),
+                              // style: themeData.textTheme.labelSmall!
+                              //     .copyWith(fontFamily: AppFonts.lato),
                             ),
                             TextButton(
                                 style: const ButtonStyle(
@@ -293,3 +298,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 }
+
+///ahmed.oraby@ocoda.com
+///123456

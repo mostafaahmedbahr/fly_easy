@@ -103,6 +103,7 @@ class _ChatWidgetState extends State<ChatWidget> {
                                   id: widget.userChat.userId,
                                   image: widget.userChat.image,
                                   name: widget.userChat.name,
+
                                   userChatId: widget.userChat.id,
                                   isTeam: false,
                                 ));

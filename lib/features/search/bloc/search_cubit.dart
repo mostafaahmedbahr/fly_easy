@@ -27,33 +27,45 @@ class SearchCubit extends Cubit<SearchState> {
   Future<void> getAvailableUsers(
       PagingController<int, MemberModel> membersPagingController,
       int pageKey) async {
+    print("111111111111");
     if (await sl<InternetStatus>().checkConnectivity()) {
+      print("22222222222");
       try {
         final Map<String, dynamic> queryParameters = {
           'page': pageKey,
           'search':usersSearchKey,
         };
+        print("333333333333");
         final Response response = await DioHelper.getData(
             path: EndPoints.myContacts, query: queryParameters);
+        print("44444444444");
         if (response.statusCode == 200) {
+          print("55555555555555");
+          print(response.data['data']);
           List<MemberModel> list = [];
           response.data['data'].forEach((team) {
             list.add(MemberModel.fromJson(team));
           });
+          print("666666666666");
           final isLastPage = response.data['data'].length < _pageSize;
+          print("77777777777777");
           if (isLastPage) {
+            print("888888888888");
             membersPagingController.appendLastPage(list);
           } else {
+            print("99999999999");
             final num nextPageKey = pageKey + 1;
             membersPagingController.appendPage(list, nextPageKey as int);
           }
         }
       } catch (error) {
+        print("1000000000000000000");
         String errorMessage = sl<ErrorModel>().getErrorMessage(error);
         membersPagingController.error = errorMessage;
         emit(ErrorState(errorMessage));
       }
     } else {
+      print("1100000000000000000000000");
       emit(ErrorState(AppStrings.checkInternet));
     }
   }
@@ -64,6 +76,7 @@ class SearchCubit extends Cubit<SearchState> {
   Future<void> getMyTeams(PagingController<int, TeamModel> teamsPagingController, int pageKey) async {
     if (await sl<InternetStatus>().checkConnectivity()) {
       try {
+
         final Map<String, dynamic> queryParameters = {
           'page': pageKey,
           'search':teamsSearchKey,
@@ -71,6 +84,8 @@ class SearchCubit extends Cubit<SearchState> {
         final Response response = await DioHelper.getData(
             path: EndPoints.allTeams, query: queryParameters);
         if (response.statusCode == 200) {
+
+
           List<TeamModel> list = [];
           response.data['data'].forEach((team) {
             list.add(TeamModel.fromJson(team));

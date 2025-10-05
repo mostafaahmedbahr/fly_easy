@@ -20,11 +20,13 @@ Future<void> handleBackGroundMessage(RemoteMessage? message) async {
     chatInfo== TeamChatInfoModel(
         id: message.data['channel_id'],
         name: message.data['channel_name'],
+
         image: message.data['channel_logo'], isTeam: true);
   }else{
     chatInfo= TeamChatInfoModel(
         id: message.data['user_id'],
         name: message.data['user_name'],
+
         userChatId: message.data['chat_user_id'],
         image: message.data['user_logo'], isTeam: false);
   }
@@ -109,11 +111,13 @@ mixin Fcm {
       sl<AppRouter>().navigatorKey.currentState!.pushNamed(Routes.chat,arguments: TeamChatInfoModel(
           id: message.data['channel_id'],
           name: message.data['channel_name'],
+
           image: message.data['channel_logo'], isTeam: true));
     }else{
       sl<AppRouter>().navigatorKey.currentState!.pushNamed(Routes.chat,arguments: TeamChatInfoModel(
           id: message.data['user_id'],
           name: message.data['user_name'],
+
           userChatId: message.data['chat_user_id'],
           image: message.data['user_logo'], isTeam: false),
 

@@ -10,6 +10,7 @@ import 'package:new_fly_easy_new/core/utils/app_extensions.dart';
 import 'package:new_fly_easy_new/core/utils/strings.dart';
 import 'package:new_fly_easy_new/core/widgets/dialog_progress_indicator.dart';
 import 'package:new_fly_easy_new/core/widgets/show_case_widget.dart';
+import 'package:new_fly_easy_new/features/contacts/bloc/contacts_cubit.dart';
 import 'package:new_fly_easy_new/features/home/bloc/home_cubit.dart';
 import 'package:new_fly_easy_new/features/home/models/user_chat_model.dart';
 import 'package:new_fly_easy_new/features/home/widgets/chats_list.dart';
@@ -28,6 +29,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   HomeCubit get cubit => HomeCubit.get(context);
+
   final PagingController<int, UserChatModel> _chatsPagingController = PagingController<int, UserChatModel>(
           firstPageKey: 1, invisibleItemsThreshold: 1);
   GlobalKey? _searchHintKey;
@@ -39,6 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _initializeShowHints();
     Future.microtask(() => cubit.getNotificationsCount());
+
   }
 
   @override

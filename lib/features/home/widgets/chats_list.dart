@@ -17,8 +17,7 @@ import 'package:new_fly_easy_new/translations/locale_keys.g.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 
 class ChatsList extends StatefulWidget {
-  const ChatsList({Key? key, required this.chatsPagingController})
-      : super(key: key);
+  const ChatsList({super.key, required this.chatsPagingController});
   final PagingController<int, UserChatModel> chatsPagingController;
 
   @override

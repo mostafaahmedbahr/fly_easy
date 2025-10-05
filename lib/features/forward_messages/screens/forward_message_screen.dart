@@ -58,8 +58,9 @@ class _ForwardMessageScreenState extends State<ForwardMessageScreen>
           child: Column(
             children: [
               TabBarWidget(tabController: _tabController, tabs: [
+                Tab(child: Text(LocaleKeys.members.tr())),
                 Tab(child: Text(LocaleKeys.teams.tr())),
-                Tab(child: Text(LocaleKeys.members.tr()))
+
               ]),
               Expanded(
                   child: TabBarView(
@@ -68,8 +69,9 @@ class _ForwardMessageScreenState extends State<ForwardMessageScreen>
                       children: const [
                     // ForwardTeamsView(teamsPagingController: _teamsPagingController),
                     // ForwardUsersView(membersPagingController: _membersPagingController,),
+                        ForwardUsersViewWithoutPagination(),
                     ForwardTeamsViewWithoutPagination(),
-                    ForwardUsersViewWithoutPagination(),
+
                   ]))
             ],
           ),

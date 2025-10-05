@@ -12,7 +12,7 @@ import 'package:new_fly_easy_new/features/invite_members/widgets/search_field.da
 import 'package:new_fly_easy_new/translations/locale_keys.g.dart';
 
 class ContactsScreen extends StatefulWidget {
-  const ContactsScreen({Key? key, required this.chatCubit}) : super(key: key);
+  const ContactsScreen({super.key, required this.chatCubit});
   final ChatCubit chatCubit;
 
   @override
@@ -25,7 +25,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
   @override
   void initState() {
     super.initState();
-    // Future.microtask(() => cubit.getContacts());
+     Future.microtask(() => cubit.getContacts());
   }
 
   @override
@@ -54,51 +54,51 @@ class _ContactsScreenState extends State<ContactsScreen> {
                     child: SearchField(
                       hint: LocaleKeys.search.tr(),
                       onChange: (value) {
-                        // cubit.searchContact(value);
+                         cubit.searchContact(value);
                       },
                     ),
                   ),
                   SizedBox(
                     height: 15.h,
                   ),
-                  // Expanded(
-                  //   child: BlocBuilder<ContactsCubit,ContactsState>(
-                  //     buildWhen: (previous, current) => current is SearchState,
-                  //     builder: (context, state) =>  ListView.separated(
-                  //       addAutomaticKeepAlives: false,
-                  //       itemBuilder: (context, index) => ContactListTile(
-                  //         contact: cubit.displayedContacts[index],
-                  //         isSelected: cubit.selectedContacts.contains(cubit.displayedContacts[index]),
-                  //       ),
-                  //       separatorBuilder: (context, index) => const Divider(
-                  //         color: Colors.grey,
-                  //         endIndent: 10,
-                  //         indent: 10,
-                  //       ),
-                  //       itemCount: cubit.displayedContacts.length,
-                  //     ),
-                  //   ),
-                  // ),
+                  Expanded(
+                    child: BlocBuilder<ContactsCubit,ContactsState>(
+                      buildWhen: (previous, current) => current is SearchState,
+                      builder: (context, state) =>  ListView.separated(
+                        addAutomaticKeepAlives: false,
+                        itemBuilder: (context, index) => ContactListTile(
+                          contact: cubit.displayedContacts[index],
+                          isSelected: cubit.selectedContacts.contains(cubit.displayedContacts[index]),
+                        ),
+                        separatorBuilder: (context, index) => const Divider(
+                          color: Colors.grey,
+                          endIndent: 10,
+                          indent: 10,
+                        ),
+                        itemCount: cubit.displayedContacts.length,
+                      ),
+                    ),
+                  ),
                 ],
               )
             : const MyProgress(),
       ),
-      // floatingActionButton: BlocBuilder<ContactsCubit, ContactsState>(
-      //   buildWhen: (previous, current) => current is SelectContact,
-      //   builder: (context, state) => cubit.selectedContacts.isNotEmpty
-      //       ? FloatingActionButton(
-      //           backgroundColor: AppColors.lightPrimaryColor,
-      //           onPressed: () {
-      //             widget.chatCubit.getSelectedContacts(cubit.selectedContacts);
-      //             context.pop();
-      //           },
-      //           child: const Icon(
-      //             Icons.send,
-      //             color: Colors.white,
-      //           ),
-      //         )
-      //       : const SizedBox.shrink(),
-      // ),
+      floatingActionButton: BlocBuilder<ContactsCubit, ContactsState>(
+        buildWhen: (previous, current) => current is SelectContact,
+        builder: (context, state) => cubit.selectedContacts.isNotEmpty
+            ? FloatingActionButton(
+                backgroundColor: AppColors.lightPrimaryColor,
+                onPressed: () {
+                  widget.chatCubit.getSelectedContacts(cubit.selectedContacts);
+                  context.pop();
+                },
+                child: const Icon(
+                  Icons.send,
+                  color: Colors.white,
+                ),
+              )
+            : const SizedBox.shrink(),
+      ),
     );
   }
 }

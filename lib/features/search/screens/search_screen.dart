@@ -72,11 +72,12 @@ class _SearchScreenState extends State<SearchScreen>
                       physics: const NeverScrollableScrollPhysics(),
                       controller: _tabController,
                       children: [
+                        SearchMembersView(
+                          membersPagingController: _membersPagingController,
+                        ),
                     SearchTeamView(
                         teamsPagingController: _teamsPagingController),
-                    SearchMembersView(
-                      membersPagingController: _membersPagingController,
-                    ),
+
                   ]))
             ],
           ),

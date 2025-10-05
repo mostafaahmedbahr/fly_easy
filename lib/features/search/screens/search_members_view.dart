@@ -13,8 +13,7 @@ import 'package:new_fly_easy_new/translations/locale_keys.g.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 
 class SearchMembersView extends StatefulWidget {
-  const SearchMembersView({Key? key, required this.membersPagingController})
-      : super(key: key);
+  const SearchMembersView({super.key, required this.membersPagingController});
   final PagingController<int, MemberModel> membersPagingController;
 
   @override
@@ -49,6 +48,8 @@ class _SearchMembersViewState extends State<SearchMembersView>
               padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 15.h),
               child: SearchField(
                   onChange: (value) {
+                    print(value);
+                    print("wwwwwww");
                     cubit.usersSearchKey = value;
                     widget.membersPagingController.refresh();
                   },

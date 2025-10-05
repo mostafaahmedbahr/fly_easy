@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+ import 'package:contacts_service_plus/contacts_service_plus.dart';
 // import 'package:contacts_service/contacts_service.dart';
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
@@ -689,23 +690,23 @@ class ChatCubit extends Cubit<ChatState> {
   }
 
   /// //////////////// Contacts ///////////////////////////////
-  // void getSelectedContacts(List<Contact> selectedContacts) {
-  //   try {
-  //     List<ContactModel> contacts = [];
-  //     for (var contact in selectedContacts) {
-  //       contacts.add(ContactModel(
-  //           name: contact.displayName ?? '',
-  //           phone: contact.phones == null || contact.phones!.isEmpty
-  //               ? ''
-  //               : contact.phones![0].value!));
-  //     }
-  //     if (contacts.isNotEmpty) {
-  //       sendSelectedContacts(contacts);
-  //     }
-  //   } catch (error) {
-  //     emit(ErrorState(AppStrings.errorMessage));
-  //   }
-  // }
+  void getSelectedContacts(List<Contact> selectedContacts) {
+    try {
+      List<ContactModel> contacts = [];
+      for (var contact in selectedContacts) {
+        contacts.add(ContactModel(
+            name: contact.displayName ?? '',
+            phone: contact.phones == null || contact.phones!.isEmpty
+                ? ''
+                : contact.phones![0].value!));
+      }
+      if (contacts.isNotEmpty) {
+        sendSelectedContacts(contacts);
+      }
+    } catch (error) {
+      emit(ErrorState(AppStrings.errorMessage));
+    }
+  }
 
   Future<void> sendSelectedContacts(List<ContactModel> contacts) async {
     for (var contact in contacts) {

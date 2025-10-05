@@ -22,6 +22,7 @@ import 'package:iconly/iconly.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 
+import '../../contacts/bloc/contacts_cubit.dart';
 import 'call_screen.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -40,11 +41,13 @@ class _ChatScreenState extends State<ChatScreen>
   ThemeData get theme => Theme.of(context);
 
   ChatCubit get cubit => ChatCubit.get(context);
+  ContactsCubit get contactsCubit => ContactsCubit.get(context);
   final ScrollController _scrollController = ScrollController();
   bool _getMoreData = false;
 
   @override
   void initState() {
+    Future.microtask(() => contactsCubit.getContacts());
     cubit.soundPlayer = AudioPlayer();
     if (widget.chatInfo.isTeam) {
       cubit.teamId = widget.chatInfo.id.toString();
@@ -254,7 +257,7 @@ class _ChatScreenState extends State<ChatScreen>
                 child: Column(
                   children: [
                     Text(
-                      widget.chatInfo.name,
+                      "widget.chatInfo.phone.toString()",
                       style: Theme.of(context).textTheme.titleMedium!.copyWith(
                           fontSize: 16.sp, fontWeight: FontWeight.w700),
                     ),
