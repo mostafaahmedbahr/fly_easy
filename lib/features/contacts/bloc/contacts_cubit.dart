@@ -17,6 +17,7 @@ class ContactsCubit extends Cubit<ContactsState> {
   Future<void> getContacts() async {
     emit(GetContactsLoad());
     try {
+      print("1111111111111111111111111");
       allContacts = await ContactsService.getContacts();
       displayedContacts = allContacts;
       emit(GetContactsSuccess());
