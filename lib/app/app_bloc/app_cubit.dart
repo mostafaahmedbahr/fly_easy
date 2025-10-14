@@ -1,5 +1,4 @@
 import 'package:contacts_service_plus/contacts_service_plus.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:new_fly_easy_new/core/cache/cahce_utils.dart';
@@ -15,40 +14,30 @@ class GlobalAppCubit extends Cubit<GlobalAppState> {
   static GlobalAppCubit get(BuildContext context) =>
       BlocProvider.of<GlobalAppCubit>(context);
 
-  List<Contact> allContacts = []; // Store contacts here
 
+
+  // ============= أوضاع النظام واللغة ============= //
   Future<void> changeTheme(bool isDark) async {
     await CacheUtils.setMode(isDark: isDark);
     emit(ChangeMode());
   }
 
-  void changeLanguage() {
-    emit(ChangeLanguage());
-  }
+  void changeLanguage() => emit(ChangeLanguage());
 
-  void refreshUserImage(){
-    emit(RefreshUserImage());
-  }
+  void refreshUserImage() => emit(RefreshUserImage());
 
-  void refreshChannelsAfterAdding() {
-    emit(RefreshTeamsAfterAdd());
-  }
+  void refreshChannelsAfterAdding() => emit(RefreshTeamsAfterAdd());
 
-  void refreshChannelsAfterUpdate() {
-    emit(RefreshTeamsAfterUpdate());
-  }
+  void refreshChannelsAfterUpdate() => emit(RefreshTeamsAfterUpdate());
 
-  void removeTeamAfterLeave(int teamId) {
-    emit(RemoveTeamAfterLeave(teamId));
-  }
+  void removeTeamAfterLeave(int teamId) =>
+      emit(RemoveTeamAfterLeave(teamId));
 
-  void receiveTeamNotification(dynamic teamId) {
-    emit(ReceiveTeamNotification(teamId));
-  }
+  void receiveTeamNotification(dynamic teamId) =>
+      emit(ReceiveTeamNotification(teamId));
 
-  void receiveUserNotification(dynamic userId) {
-    emit(ReceiveUserNotification(userId));
-  }
+  void receiveUserNotification(dynamic userId) =>
+      emit(ReceiveUserNotification(userId));
 
   void clearTeamChatNotifications(dynamic teamId) {
     emit(ClearTeamChatNotifications(teamId));
@@ -60,19 +49,34 @@ class GlobalAppCubit extends Cubit<GlobalAppState> {
     DioHelper.postData(path: '${EndPoints.clearUserNotification}/$chatId');
   }
 
-  Future<void> requestContactsPermission() async {
-    emit(PermissionLoading());
+  List<Contact> allContacts = [];
+  bool _contactsLoaded = false;
 
+  // ============= إذن جهات الاتصال ============= //
+  Future<void> requestContactsPermission() async {
+    // ✅ لا تعيد emit إذا الاتصالات محملة مسبقاً
+    if (_contactsLoaded && allContacts.isNotEmpty) {
+      print("✅ جهات الاتصال محملة مسبقاً");
+      return;
+    }
+
+    emit(PermissionLoading());
     final status = await Permission.contacts.status;
 
     if (status.isGranted) {
-      await _loadContacts(); // جلب جهات الاتصال بعد الحصول على الإذن
-      emit(PermissionGranted());
+      await _loadContactsOnce();
+      // ✅ emit مرة واحدة فقط
+      if (!_contactsLoaded) {
+        emit(PermissionGranted());
+      }
     } else if (status.isDenied) {
       final result = await Permission.contacts.request();
       if (result.isGranted) {
-        await _loadContacts(); // جلب جهات الاتصال بعد الحصول على الإذن
-        emit(PermissionGranted());
+        await _loadContactsOnce();
+        // ✅ emit مرة واحدة فقط
+        if (!_contactsLoaded) {
+          emit(PermissionGranted());
+        }
       } else {
         emit(PermissionDenied());
       }
@@ -81,21 +85,32 @@ class GlobalAppCubit extends Cubit<GlobalAppState> {
     }
   }
 
-  // دالة خاصة لجلب جهات الاتصال
-  Future<void> _loadContacts() async {
+  // ✅ تحميل جهات الاتصال مرة واحدة فقط
+  Future<void> _loadContactsOnce() async {
+    if (_contactsLoaded) {
+      print("📞 جهات الاتصال محملة مسبقاً (${allContacts.length})");
+      return;
+    }
+
     try {
       final contacts = await ContactsService.getContacts();
       allContacts = contacts.toList();
-      print('تم جلب ${allContacts.length} جهة اتصال');
+      _contactsLoaded = true;
+      print('✅ تم جلب ${allContacts.length} جهة اتصال بنجاح');
+      // ❌ لا ت emit هنا علشان منعاً للتكرار
     } catch (e) {
-      print('خطأ في جلب جهات الاتصال: $e');
+      print('⚠️ خطأ أثناء تحميل جهات الاتصال: $e');
       allContacts = [];
+      emit(PermissionDenied());
     }
   }
 
-  // دالة لإعادة تحميل جهات الاتصال يدوياً إذا لزم الأمر
+  // لإعادة تحميل يدوي
   Future<void> reloadContacts() async {
-    await _loadContacts();
-    emit(ContactsLoaded()); // يمكنك إضافة state جديد لهذا
+    _contactsLoaded = false;
+    allContacts = [];
+    await _loadContactsOnce();
+    // ✅ emit مرة واحدة بعد إعادة التحميل
+    emit(PermissionGranted());
   }
 }

@@ -257,7 +257,7 @@ class _ChatScreenState extends State<ChatScreen>
                 child: Column(
                   children: [
                     Text(
-                      "widget.chatInfo.phone.toString()",
+                      widget.chatInfo.name,
                       style: Theme.of(context).textTheme.titleMedium!.copyWith(
                           fontSize: 16.sp, fontWeight: FontWeight.w700),
                     ),
