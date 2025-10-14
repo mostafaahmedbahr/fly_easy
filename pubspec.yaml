@@ -104,7 +104,9 @@ dependencies:
   record: ^6.1.1
   flutter_chat_types: ^3.6.2
   contacts_service_plus: ^0.0.2
-  flutter_libphonenumber: ^2.5.1
+
+
+
 #  contacts_service: ^0.6.3
 
 

@@ -86,22 +86,26 @@ class GlobalAppCubit extends Cubit<GlobalAppState> {
   }
 
   // ✅ تحميل جهات الاتصال مرة واحدة فقط
+  // في app_cubit.dart
   Future<void> _loadContactsOnce() async {
-    if (_contactsLoaded) {
-      print("📞 جهات الاتصال محملة مسبقاً (${allContacts.length})");
-      return;
-    }
+    if (_contactsLoaded) return;
 
     try {
-      final contacts = await ContactsService.getContacts();
+      print("⚡ تحميل جهات الاتصال بشكل معجل...");
+
+      // ✅ استخدم withProperties: false علشان تتحميل أسرع
+      final contacts = await ContactsService.getContacts(
+        withThumbnails: false, // ❌ لا تحمل الصور المصغرة
+        photoHighResolution: false, // ❌ لا تحمل الصور عالية الجودة
+      );
+
       allContacts = contacts.toList();
       _contactsLoaded = true;
-      print('✅ تم جلب ${allContacts.length} جهة اتصال بنجاح');
-      // ❌ لا ت emit هنا علشان منعاً للتكرار
+
+      print('✅ تم جلب ${allContacts.length} جهة اتصال في وقت سريع');
     } catch (e) {
-      print('⚠️ خطأ أثناء تحميل جهات الاتصال: $e');
+      print('⚠️ خطأ في تحميل الاتصالات: $e');
       allContacts = [];
-      emit(PermissionDenied());
     }
   }
 

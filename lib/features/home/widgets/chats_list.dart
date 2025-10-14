@@ -28,140 +28,119 @@ class ChatsList extends StatefulWidget {
 }
 
 class _ChatsListState extends State<ChatsList> {
-  HomeCubit get homeCubit => HomeCubit.get(context);
-  GlobalAppCubit get globalCubit => GlobalAppCubit.get(context);
-
+  late final HomeCubit _homeCubit;
+  late final GlobalAppCubit _globalCubit;
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    _homeCubit = HomeCubit.get(context);
+    _globalCubit = GlobalAppCubit.get(context);
 
     widget.chatsPagingController.addPageRequestListener((pageKey) {
-      homeCubit.getChatsNew(pageKey, widget.chatsPagingController);
+      _homeCubit.getChatsNew(pageKey, widget.chatsPagingController);
     });
 
     _initializeData();
   }
 
   Future<void> _initializeData() async {
-    print("🔄 بدء تحميل البيانات...");
+    debugPrint("🔄 بدء تحميل البيانات...");
 
-    // ✅ انتظر تحميل جهات الاتصال أولاً
-    if (globalCubit.allContacts.isEmpty) {
-      print("📞 جاري تحميل جهات الاتصال...");
-      await globalCubit.requestContactsPermission();
+    // تحميل جهات الاتصال (إن لم تكن جاهزة)
+    if (_globalCubit.allContacts.isEmpty) {
+      debugPrint("📞 تحميل جهات الاتصال...");
+      await _globalCubit.requestContactsPermission();
     } else {
-      print("✅ جهات الاتصال جاهزة مسبقاً");
+      debugPrint("✅ جهات الاتصال جاهزة مسبقاً");
     }
 
-    // ✅ انتظر تحميل الـ chats الأولى
-    print("💬 جاري تحميل المحادثات...");
-    await homeCubit.getChatsNew(1, widget.chatsPagingController);
+    // تحميل الصفحة الأولى من المحادثات
+    debugPrint("💬 تحميل المحادثات...");
+    await _homeCubit.getChatsNew(1, widget.chatsPagingController);
 
-    // ✅ أعط وقت للـ paging controller علشان يتحمل
-    await Future.delayed(const Duration(milliseconds: 500));
+    // إعطاء وقت بسيط للـ PagingController ليُحدّث بياناته
+    await Future.delayed(const Duration(milliseconds: 400));
 
-    setState(() {
-      _isLoading = false;
-    });
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
 
-    print("🎉 انتهى تحميل جميع البيانات");
+    debugPrint("🎉 انتهى تحميل جميع البيانات");
   }
 
-  Contact? _findContact(UserChatModel chat) {
-    return PhoneUtils.findContactByPhone(
-        chat.phone,
-        globalCubit.allContacts
-    );
+  Future<Contact?> _findContact(UserChatModel chat) async {
+    return PhoneUtils.findContactByPhone(chat.phone, _globalCubit.allContacts);
   }
+
 
   @override
   Widget build(BuildContext context) {
-    // ✅ استخدم BlocListener بدل BlocBuilder علشان منع ال rebuilds
     return BlocListener<GlobalAppCubit, GlobalAppState>(
-      listener: (context, state) {
-        // استمع للتغيرات فقط بدون ما تعمل rebuild
-      },
-      child: _isLoading
-          ? _buildLoadingWidget()
-          : _buildContentWidget(),
+      listener: (_, __) {},
+      child: _isLoading ? _buildLoadingView() : _buildChatsList(),
     );
   }
 
-  Widget _buildLoadingWidget() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const MyProgress(),
-          SizedBox(height: 16.h),
-          Text(
-            'Loading chats and contacts...',
-            style: TextStyle(
-              fontSize: 16.sp,
-              color: Colors.grey,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _buildLoadingView() => Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const MyProgress(),
+        SizedBox(height: 16.h),
+        Text(
+          'Loading chats and contacts...',
+          style: TextStyle(fontSize: 16.sp, color: Colors.grey),
+        ),
+      ],
+    ),
+  );
 
-  Widget _buildContentWidget() {
+  Widget _buildChatsList() {
     return RefreshIndicator.adaptive(
-      onRefresh: () async {
-        setState(() {
-          _isLoading = true;
-        });
-
-        await globalCubit.reloadContacts();
-        widget.chatsPagingController.refresh();
-
-        // انتظر لحد ما التحديث يخلص
-        await Future.delayed(const Duration(milliseconds: 1000));
-
-        setState(() {
-          _isLoading = false;
-        });
-      },
       color: AppColors.lightPrimaryColor,
+      onRefresh: _onRefresh,
       child: BlocBuilder<HomeCubit, HomeState>(
-        buildWhen: (previous, current) => current is DeleteChatSuccess,
-        builder: (context, state) => PagedListView.separated(
+        buildWhen: (_, state) => state is DeleteChatSuccess,
+        builder: (_, __) => PagedListView.separated(
           padding: EdgeInsets.only(bottom: 10.h),
           pagingController: widget.chatsPagingController,
           separatorBuilder: (_, __) => SizedBox(height: 15.h),
           builderDelegate: PagedChildBuilderDelegate<UserChatModel>(
-            itemBuilder: (context, item, index) {
-              final contact = _findContact(item);
-              return Slidable(
-                startActionPane: ActionPane(
-                  motion: const BehindMotion(),
-                  extentRatio: .25,
-                  children: [
-                    SlidableAction(
-                      borderRadius: BorderRadius.circular(10),
-                      backgroundColor: Colors.red,
-                      icon: AppIcons.delete,
-                      autoClose: true,
-                      onPressed: (_) {
-                        AppFunctions.showAdaptiveDialog(
+            itemBuilder: (context, chat, index) => FutureBuilder<Contact?>(
+              future: _findContact(chat),
+              builder: (_, snapshot) {
+                final contact = snapshot.data;
+                return Slidable(
+                  key: ValueKey(chat.id),
+                  startActionPane: ActionPane(
+                    motion: const BehindMotion(),
+                    extentRatio: .25,
+                    children: [
+                      SlidableAction(
+                        borderRadius: BorderRadius.circular(10),
+                        backgroundColor: Colors.red,
+                        icon: AppIcons.delete,
+                        autoClose: true,
+                        onPressed: (_) => AppFunctions.showAdaptiveDialog(
                           context,
                           title: LocaleKeys.do_you_want_delete_chat.tr(),
                           actionName: LocaleKeys.delete.tr(),
-                          onPress: () => homeCubit.deleteChat(item.id),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-                child: ChatWidget(userChat: item, contact: contact),
-              );
-            },
-            firstPageProgressIndicatorBuilder: (_) => const SizedBox.shrink(), // ❌ لا تظهر loading هنا
-            firstPageErrorIndicatorBuilder: (_) =>
-                TeamsErrorView(message: widget.chatsPagingController.error),
+                          onPress: () => _homeCubit.deleteChat(chat.id),
+                        ),
+                      ),
+                    ],
+                  ),
+                  child: ChatWidget(userChat: chat, contact: contact),
+                );
+              },
+            ),
+            firstPageProgressIndicatorBuilder: (_) =>
+            const SizedBox.shrink(), // لا نظهر لودينغ أولي
+            firstPageErrorIndicatorBuilder: (_) => TeamsErrorView(
+              message: widget.chatsPagingController.error,
+            ),
             noItemsFoundIndicatorBuilder: (_) => Center(
               child: EmptyWidget(
                 text: LocaleKeys.no_chats.tr(),
@@ -174,5 +153,15 @@ class _ChatsListState extends State<ChatsList> {
         ),
       ),
     );
+  }
+
+  Future<void> _onRefresh() async {
+    setState(() => _isLoading = true);
+    await Future.wait([
+      _globalCubit.reloadContacts(),
+      Future.delayed(const Duration(milliseconds: 600)),
+    ]);
+    widget.chatsPagingController.refresh();
+    if (mounted) setState(() => _isLoading = false);
   }
 }

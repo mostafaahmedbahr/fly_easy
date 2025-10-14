@@ -1,212 +1,236 @@
-// lib/core/utils/phone_utils.dart
-
+import 'dart:developer' as dev;
 import 'package:contacts_service_plus/contacts_service_plus.dart';
 
+/// PhoneUtils — تحسين متقدم للتطبيع (normalize) والمطابقة من دون مكتبات خارجية.
+/// ملاحظة: هذا حل عملي ودقيق لمعظم الحالات، لكنه ليس بديلاً كاملاً لمكتبات متخصصة
+/// (مثل libphonenumber) عندما تحتاج دقة 100% لكل استثناءات دولية.
 class PhoneUtils {
-  /// 🌍 رموز الدول الشائعة
-  static const Map<String, String> countryCodes = {
-    'EG': '20', // مصر
-    'SA': '966', // السعودية
-    'AE': '971', // الإمارات
-    'KW': '965', // الكويت
-    'QA': '974', // قطر
-    'BH': '973', // البحرين
-    'OM': '968', // عمان
-    'JO': '962', // الأردن
-    'LB': '961', // لبنان
-    'SY': '963', // سوريا
-    'IQ': '964', // العراق
-    'DZ': '213', // الجزائر
-    'MA': '212', // المغرب
-    'TN': '216', // تونس
-    'SD': '249', // السودان
-    'LY': '218', // ليبيا
-    'YE': '967', // اليمن
-    'US': '1', // الولايات المتحدة
-    'GB': '44', // بريطانيا
-    'FR': '33', // فرنسا
-    'DE': '49', // ألمانيا
-    'IT': '39', // إيطاليا
-    'RU': '7', // روسيا
-    'IN': '91', // الهند
-    'CN': '86', // الصين
-    'JP': '81', // اليابان
-    'BR': '55', // البرازيل
+  static final Map<String, String> _cache = {};
+
+  /// خريطة ISO -> calling code و trunkPrefix (إذا وُجد).
+  /// يمكن توسيعها حسب حاجتك. أدرجت مجموعة كبيرة من الدول الشائعة.
+  static const Map<String, Map<String, String>> _countryMeta = {
+    'EG': {'code': '20', 'trunk': '0'},
+    'SA': {'code': '966', 'trunk': '0'},
+    'AE': {'code': '971', 'trunk': '0'},
+    'JO': {'code': '962', 'trunk': '0'},
+    'KW': {'code': '965', 'trunk': '0'},
+    'QA': {'code': '974', 'trunk': '0'},
+    'OM': {'code': '968', 'trunk': '0'},
+    'BH': {'code': '973', 'trunk': '0'},
+    'LY': {'code': '218', 'trunk': '0'},
+    'SD': {'code': '249', 'trunk': '0'},
+    'DZ': {'code': '213', 'trunk': '0'},
+    'MA': {'code': '212', 'trunk': '0'},
+    'TN': {'code': '216', 'trunk': '0'},
+    'IQ': {'code': '964', 'trunk': '0'},
+    'TR': {'code': '90', 'trunk': '0'},
+    'US': {'code': '1', 'trunk': ''},    // NANP لا يستخدم 0 كـ trunk داخلي
+    'CA': {'code': '1', 'trunk': ''},
+    'GB': {'code': '44', 'trunk': '0'},
+    'FR': {'code': '33', 'trunk': '0'},
+    'DE': {'code': '49', 'trunk': '0'},
+    'IN': {'code': '91', 'trunk': '0'},
+    'PK': {'code': '92', 'trunk': '0'},
+    'NG': {'code': '234', 'trunk': '0'},
+    'AU': {'code': '61', 'trunk': '0'},
+    'NZ': {'code': '64', 'trunk': '0'},
+    'BR': {'code': '55', 'trunk': '0'},
+    // أضف أو عدّل حسب جمهور تطبيقك...
   };
 
-  /// 🔢 تنظيف وتوحيد تنسيق الرقم (دولي)
-  static String? normalizePhone(String? phone) {
-    if (phone == null || phone.isEmpty) return null;
+  /// Länder list (iso codes) يستخدم كترتيب افتراضي للتجريب.
+  static List<String> _allowedIsoCodes = _countryMeta.keys.toList();
 
-    try {
-      // إزالة جميع المسافات والأحرف الخاصة
-      String cleaned = phone.replaceAll(RegExp(r'[\s\-\(\)]'), '');
+  /// بناء خريطة من رموز الدول (country calling codes) لراحتنا عند البحث السريع.
+  /// تُنشأ لأول مرة.
+  static Map<String, String>? _callingCodeToIsoCache;
+  static Map<String, String> get _callingCodeToIso {
+    if (_callingCodeToIsoCache != null) return _callingCodeToIsoCache!;
+    final map = <String, String>{};
+    _countryMeta.forEach((iso, meta) {
+      final code = meta['code']!;
+      map[code] = iso;
+    });
+    // نجعل البحث أسهل عن طريق فرز مفاتيح الأكواد (طوليا) عند الماتش
+    _callingCodeToIsoCache = map;
+    return _callingCodeToIsoCache!;
+  }
 
-      // معالجة البادئات الدولية
-      if (cleaned.startsWith('00')) {
-        cleaned = cleaned.substring(2);
-      } else if (cleaned.startsWith('+')) {
-        cleaned = cleaned.substring(1);
-      }
-
-      // إزالة الأصفار الزائدة في البداية (ماعدا الرقم 0 نفسه)
-      if (cleaned.length > 1 && cleaned.startsWith('0')) {
-        cleaned = cleaned.substring(1);
-      }
-
-      return cleaned.isNotEmpty ? cleaned : null;
-    } catch (e) {
-      print('⚠️ خطأ في معالجة الرقم: $phone - $e');
-      return null;
+  /// تعديل قائمة الدول المسموح بها (مثلاً من إعدادات السيرفر)
+  static void setAllowedCountries(List<String> isoCodes) {
+    final normalized = isoCodes.map((e) => e.toUpperCase()).where((e) => _countryMeta.containsKey(e)).toList();
+    if (normalized.isNotEmpty) {
+      _allowedIsoCodes = normalized;
+      dev.log('PhoneUtils: allowed ISOs set: $_allowedIsoCodes');
     }
   }
 
-  /// 🔍 استخراج رمز الدولة من الرقم
-  static String? extractCountryCode(String phone) {
-    final normalized = normalizePhone(phone);
-    if (normalized == null) return null;
+  /// تنظيف أساسي + استبدال بادئات دولية شائعة
+  static String _clean(String input) {
+    if (input == null) return '';
+    var s = input.trim();
+    // نستبدل unicode + variations لو ظهرت
+    s = s.replaceAll(RegExp(r'[^\d\+]'), ''); // اترك الأرقام و +
+    // handle leading 011 (NANP international dial) -> treat as international prefix
+    if (s.startsWith('011')) {
+      s = '+${s.substring(3)}';
+    }
+    // leading 00 -> +
+    if (s.startsWith('00')) {
+      s = '+${s.substring(2)}';
+    }
+    return s;
+  }
 
-    // البحث عن رمز الدولة المطابق
-    for (final code in countryCodes.values) {
-      if (normalized.startsWith(code)) {
-        return code;
+  /// محاولة اكتشاف الدولة إذا الرقم دولي (يبدأ بـ +)
+  static String? _detectIsoFromInternational(String plusNumber) {
+    // نزيل +
+    String digits = plusNumber.startsWith('+') ? plusNumber.substring(1) : plusNumber;
+    // نجرب الأكواد الأكثر طولًا أولاً (مثلاً 1، 20، 212، 213 ... لكن نفحص الطول الأكبر أولاً)
+    final codes = _callingCodeToIso.keys.toList()
+      ..sort((a, b) => b.length.compareTo(a.length)); // طول تنازلي
+    for (final code in codes) {
+      if (digits.startsWith(code)) {
+        return _callingCodeToIso[code];
       }
     }
-
     return null;
   }
 
-  /// 🌍 تحديد الدولة من الرقم
-  static String? detectCountry(String phone) {
-    final countryCode = extractCountryCode(phone);
-    if (countryCode == null) return null;
+  /// إنتاج نسخة E.164 من رقم؛ يحاول قدر الإمكان عبر استراتيجيات متعددة.
+  /// defaultIso: بلد افتراضي لاستكمال الأرقام المحلية.
+  static String normalizePhone(String? phone, {String defaultIso = 'EG'}) {
+    if (phone == null || phone.trim().isEmpty) return '';
 
-    return countryCodes.entries
-        .firstWhere(
-          (entry) => entry.value == countryCode,
-      orElse: () => const MapEntry('', ''),
-    )
-        .key;
-  }
+    final cleaned0 = _clean(phone);
+    if (cleaned0.isEmpty) return '';
 
-  /// 🎯 توليد جميع الصيغ المحتملة للرقم للمقارنة
-  static Set<String> generateAllPhoneFormats(String? phone) {
-    final formats = <String>{};
-    if (phone == null) return formats;
+    // cache key use original cleaned (so +... and variations stored separately)
+    if (_cache.containsKey(cleaned0)) return _cache[cleaned0]!;
 
-    final normalized = normalizePhone(phone);
-    if (normalized == null) return formats;
+    String result = cleaned0;
 
-    final countryCode = extractCountryCode(normalized);
-    final country = detectCountry(normalized);
+    // 1) لو عندنا + فهي دولية: نرتبها لتبدأ بـ +
+    if (result.startsWith('+')) {
+      // Normalize: + then digits (already)
+      _cache[cleaned0] = result;
+      return result;
+    }
 
-    // الصيغة الأساسية (بدون رموز)
-    formats.add(normalized);
+    // 2) إذا بعد التنظيف لا يوجد + -> محلي أو مع بادئة غير معروفة
+    // نحاول استراتيجيات متعددة بالأولوية:
+    // Strategy A: إذا الرقم يبدأ ببعض الأصفار الزائدة (مثل 00 handled) أو 0 -> نحزيل الـ trunk ونضيف الكود
+    final isoCandidates = <String>[defaultIso] + _allowedIsoCodes.where((e) => e != defaultIso).toList();
 
-    if (countryCode != null) {
-      // الصيغ المختلفة مع رمز الدولة
-      formats.add('+$countryCode${_getLocalNumber(normalized, countryCode)}');
-      formats.add('00$countryCode${_getLocalNumber(normalized, countryCode)}');
-      formats.add('0${_getLocalNumber(normalized, countryCode)}'); // الصيغة المحلية
+    for (final iso in isoCandidates) {
+      final meta = _countryMeta[iso];
+      if (meta == null) continue;
+      final code = meta['code']!;
+      final trunk = meta['trunk'] ?? '';
 
-      // الصيغة بدون رمز الدولة
-      final localNumber = _getLocalNumber(normalized, countryCode);
-      if (localNumber != normalized) {
-        formats.add(localNumber);
+      // محاولة 1: لو الرقم يبدأ بـ trunk (مثلاً 0) → نزيله ثم نضيف رمز البلد
+      String afterTrunk = result;
+      if (trunk.isNotEmpty && afterTrunk.startsWith(trunk)) {
+        afterTrunk = afterTrunk.substring(trunk.length);
       }
-    } else {
-      // إذا لم يتم التعرف على رمز الدولة، نجرب الصيغ الشائعة
-      _addCommonFormats(formats, normalized);
-    }
+      // محاولة 2: لو الرقم لا يبدأ بـ trunk، جربه كما هو
+      final candidate1 = '+$code$afterTrunk';
+      final candidate2 = '+$code$result';
 
-    // إضافة الصيغة بدون أي رموز
-    final digitsOnly = normalized.replaceAll(RegExp(r'[^\d]'), '');
-    formats.add(digitsOnly);
-
-    return formats;
-  }
-
-  /// 📞 استخراج الرقم المحلي بعد إزالة رمز الدولة
-  static String _getLocalNumber(String normalizedPhone, String countryCode) {
-    if (normalizedPhone.startsWith(countryCode)) {
-      return normalizedPhone.substring(countryCode.length);
-    }
-    return normalizedPhone;
-  }
-
-  /// ➕ إضافة الصيغ الشائعة للأرقام بدون رمز دولة معروف
-  static void _addCommonFormats(Set<String> formats, String normalized) {
-    // جرب جميع رموز الدول الشائعة في المنطقة
-    const middleEastCodes = ['20', '966', '971', '965', '974', '973', '968', '962', '961'];
-
-    for (final code in middleEastCodes) {
-      if (!normalized.startsWith(code)) {
-        formats.add('+$code$normalized');
-        formats.add('00$code$normalized');
+      // heuristics: نفضّل الشكل الذي يعطي طول منطقي (بين 7 و 15 أرقام بعد +)
+      bool validCandidate(String cand) {
+        final digits = cand.replaceAll('+', '');
+        return digits.length >= 7 && digits.length <= 15;
       }
+
+      if (validCandidate(candidate1)) {
+        _cache[cleaned0] = candidate1;
+        return candidate1;
+      }
+      if (validCandidate(candidate2)) {
+        _cache[cleaned0] = candidate2;
+        return candidate2;
+      }
+      // إذا لم ينجح أي منهما، نواصل التجريب مع بلد آخر
     }
 
-    // الصيغ المحلية (تبدأ بـ 0)
-    if (!normalized.startsWith('0')) {
-      formats.add('0$normalized');
-    }
+    // 3) كحل أخير: إذا لم نقدر نحدّد بشكل مقنع، نحاول إضافة default بدون إزالة trunk
+    final fallbackPrefix = _countryMeta[defaultIso]?['code'] ?? '20';
+    final fallback = '+$fallbackPrefix$result';
+    _cache[cleaned0] = fallback;
+    return fallback;
   }
 
-  /// 🎯 البحث عن جهة اتصال مطابقة مع جميع الصيغ
-  static Contact? findContactByPhone(
-      String? phone,
-      List<Contact> allContacts
-      ) {
-    if (phone == null || allContacts.isEmpty) return null;
+  /// مقارنة سريعة بين رقمين: نحاول عدة استراتيجيات (normalize مباشر، ثم تجريب iso allowed)
+  static bool arePhonesEqual(String? a, String? b, {List<String>? isoCodes, String defaultIso = 'EG'}) {
+    if (a == null || b == null) return false;
+    final cleanedA = _clean(a);
+    final cleanedB = _clean(b);
+    if (cleanedA.isEmpty || cleanedB.isEmpty) return false;
 
-    final searchFormats = generateAllPhoneFormats(phone);
+    // نفس السلسلة بعد التنظيف (مثل +2010... و +2010...) -> true مباشرة
+    if (cleanedA == cleanedB) return true;
 
-    print('🔍 البحث عن: $phone');
-    print('   📱 الصيغ المحتملة: $searchFormats');
+    // محاولة normalizing مع defaultIso سريعاً
+    final nA = normalizePhone(a, defaultIso: defaultIso);
+    final nB = normalizePhone(b, defaultIso: defaultIso);
+    if (nA == nB) return true;
+
+    // نجرب عبر مجموعة الدول (isoCodes param أو المفعّلة)
+    final countries = isoCodes ?? _allowedIsoCodes;
+    for (final iso in countries) {
+      final nnA = normalizePhone(a, defaultIso: iso);
+      final nnB = normalizePhone(b, defaultIso: iso);
+      if (nnA == nnB) return true;
+    }
+
+    // كنقطة أخيرة: إذا أحدهما يبدأ بـ + ونفس الباقي (بعد إزالة code) -> تحقق بسيط
+    String stripCountry(String plusNumber) {
+      if (!plusNumber.startsWith('+')) return plusNumber;
+      final digits = plusNumber.substring(1);
+      // remove matched calling code
+      final codes = _callingCodeToIso.keys.toList()..sort((a, b) => b.length.compareTo(a.length));
+      for (final code in codes) {
+        if (digits.startsWith(code)) {
+          return digits.substring(code.length);
+        }
+      }
+      return digits;
+    }
+
+    final sA = stripCountry(nA);
+    final sB = stripCountry(nB);
+    if (sA == sB) return true;
+
+    return false;
+  }
+
+  /// إيجاد جهة اتصال: يجرب المقارنة بطريقة فعّالة (يقارن normalized forms)
+  static Future<Contact?> findContactByPhone(String? phone, List<Contact> allContacts, {String defaultIso = 'EG'}) async {
+    if (phone == null || phone.trim().isEmpty) return null;
+    final normalizedTarget = normalizePhone(phone, defaultIso: defaultIso);
 
     for (final contact in allContacts) {
-      for (final contactPhone in contact.phones ?? []) {
-        final contactFormats = generateAllPhoneFormats(contactPhone.value);
-
-        // البحث عن تطابق بين مجموعتي الصيغ
-        final match = searchFormats.intersection(contactFormats);
-        if (match.isNotEmpty) {
-          print('✅ تم العثور على تطابق: $phone ↔ ${contactPhone.value}');
-          print('   👤 اسم جهة الاتصال: ${contact.displayName}');
-          print('   🎯 الصيغ المتطابقة: $match');
+      for (final p in contact.phones ?? []) {
+        final candidate = p.value ?? '';
+        // مقارنة سريعة جدًا: أولاً نفس السلسلة بعد تنظيف
+        if (_clean(candidate) == _clean(phone)) return contact;
+        // ثم المقارنة المتقدمة
+        if (arePhonesEqual(normalizedTarget, candidate, defaultIso: defaultIso)) {
+          dev.log('✅ تطابق: ${contact.displayName} ↔ $phone');
           return contact;
         }
       }
     }
-
-    print('❌ لا يوجد تطابق لـ: $phone');
     return null;
   }
 
-  /// 📞 استخراج جميع الأرقام من جهة اتصال
-  static List<String> extractAllPhones(Contact contact) {
-    final phones = <String>[];
-    for (final phone in contact.phones ?? []) {
-      final normalized = normalizePhone(phone.value);
-      if (normalized != null) {
-        phones.add(normalized);
-      }
-    }
-    return phones;
+  static void clearCache() {
+    _cache.clear();
+    _callingCodeToIsoCache = null;
+    dev.log('PhoneUtils: cache cleared');
   }
 
-  /// 🏳️ الحصول على اسم الدولة من الرمز
-  static String getCountryName(String countryCode) {
-    const countryNames = {
-      'EG': 'مصر', 'SA': 'السعودية', 'AE': 'الإمارات', 'KW': 'الكويت',
-      'QA': 'قطر', 'BH': 'البحرين', 'OM': 'عمان', 'JO': 'الأردن',
-      'LB': 'لبنان', 'SY': 'سوريا', 'IQ': 'العراق', 'DZ': 'الجزائر',
-      'MA': 'المغرب', 'TN': 'تونس', 'SD': 'السودان', 'LY': 'ليبيا',
-      'YE': 'اليمن', 'US': 'الولايات المتحدة', 'GB': 'بريطانيا',
-      'FR': 'فرنسا', 'DE': 'ألمانيا', 'IT': 'إيطاليا', 'RU': 'روسيا',
-      'IN': 'الهند', 'CN': 'الصين', 'JP': 'اليابان', 'BR': 'البرازيل',
-    };
-
-    return countryNames[countryCode] ?? 'غير معروف';
-  }
+  static int get cacheSize => _cache.length;
 }
