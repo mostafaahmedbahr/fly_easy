@@ -44,3 +44,8 @@ class ClearUserChatNotifications extends GlobalAppState {
 
   ClearUserChatNotifications(this.userId);
 }
+class PermissionLoading extends GlobalAppState {}
+class PermissionGranted extends GlobalAppState {}
+class PermissionDenied extends GlobalAppState {}
+class PermissionPermanentlyDenied extends GlobalAppState {}
+class ContactsLoaded extends GlobalAppState {} // أضف هذا ال state الجديد

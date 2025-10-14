@@ -6,6 +6,7 @@ import 'package:new_fly_easy_new/core/cache/cahce_utils.dart';
 import 'package:new_fly_easy_new/core/injection/di_container.dart';
 import 'package:new_fly_easy_new/core/routing/router.dart';
 import 'package:new_fly_easy_new/core/routing/routes.dart';
+import 'package:permission_handler/permission_handler.dart'; // أضف هذا
 
 import '../core/utils/theme.dart';
 import 'app_bloc/app_cubit.dart';
@@ -19,13 +20,21 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   @override
+  void initState() {
+    super.initState();
+
+  }
+
+
+
+  @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
       designSize: const Size(360, 690),
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) => BlocProvider(
-        create: (context) => GlobalAppCubit(),
+        create: (context) => GlobalAppCubit()..requestContactsPermission(),
         child: BlocBuilder<GlobalAppCubit, GlobalAppState>(
           builder: (context, state) => MaterialApp(
             debugShowCheckedModeBanner: false,
