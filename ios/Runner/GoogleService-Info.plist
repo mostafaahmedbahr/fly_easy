@@ -3,17 +3,17 @@
 <plist version="1.0">
 <dict>
 	<key>API_KEY</key>
-	<string>AIzaSyBYQjVMmuHo94gC8kzK8QgDAYvbgJEW5uI</string>
+	<string>AIzaSyDyQVQd6YAlzKNcp_b3kUvT437gKpFKr94</string>
 	<key>GCM_SENDER_ID</key>
-	<string>605775608394</string>
+	<string>885827899229</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
 	<string>com.flyEasy.teamsapp</string>
 	<key>PROJECT_ID</key>
-	<string>teams-d48cf</string>
+	<string>teams-app-3a45c</string>
 	<key>STORAGE_BUCKET</key>
-	<string>teams-d48cf.appspot.com</string>
+	<string>teams-app-3a45c.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:605775608394:ios:94aa4a4912b3f3f355c4b3</string>
+	<string>1:885827899229:ios:776737e20f23e8ca6da2b4</string>
 </dict>
 </plist>

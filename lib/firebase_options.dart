@@ -50,19 +50,19 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDThu2ztJTsHGOsiDcOP6S4hu7DxnDF7RM',
-    appId: '1:605775608394:android:ea7411e91a038e4e55c4b3',
-    messagingSenderId: '605775608394',
-    projectId: 'teams-d48cf',
-    storageBucket: 'teams-d48cf.appspot.com',
+    apiKey: 'AIzaSyAMtlOhfur50qU-AfTKFGsI7YxczfW-JDA',
+    appId: '1:885827899229:android:909248a08e947dbd6da2b4',
+    messagingSenderId: '885827899229',
+    projectId: 'teams-app-3a45c',
+    storageBucket: 'teams-app-3a45c.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyBYQjVMmuHo94gC8kzK8QgDAYvbgJEW5uI',
-    appId: '1:605775608394:ios:94aa4a4912b3f3f355c4b3',
-    messagingSenderId: '605775608394',
-    projectId: 'teams-d48cf',
-    storageBucket: 'teams-d48cf.appspot.com',
+    apiKey: 'AIzaSyDyQVQd6YAlzKNcp_b3kUvT437gKpFKr94',
+    appId: '1:885827899229:ios:776737e20f23e8ca6da2b4',
+    messagingSenderId: '885827899229',
+    projectId: 'teams-app-3a45c',
+    storageBucket: 'teams-app-3a45c.firebasestorage.app',
     iosBundleId: 'com.flyEasy.teamsapp',
   );
 }

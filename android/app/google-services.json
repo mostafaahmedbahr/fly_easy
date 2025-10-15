@@ -1,65 +1,26 @@
 {
   "project_info": {
-    "project_number": "605775608394",
-    "project_id": "teams-d48cf",
-    "storage_bucket": "teams-d48cf.appspot.com"
+    "project_number": "885827899229",
+    "project_id": "teams-app-3a45c",
+    "storage_bucket": "teams-app-3a45c.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:605775608394:android:c9106e61f29fb86b55c4b3",
-        "android_client_info": {
-          "package_name": "io.flyeasy.teams"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "605775608394-gctbkhps870596a5qqr25g9ck8me1mfi.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyDThu2ztJTsHGOsiDcOP6S4hu7DxnDF7RM"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "605775608394-gctbkhps870596a5qqr25g9ck8me1mfi.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:605775608394:android:ea7411e91a038e4e55c4b3",
+        "mobilesdk_app_id": "1:885827899229:android:909248a08e947dbd6da2b4",
         "android_client_info": {
           "package_name": "io.flyeasy.teamsapp"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "605775608394-gctbkhps870596a5qqr25g9ck8me1mfi.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDThu2ztJTsHGOsiDcOP6S4hu7DxnDF7RM"
+          "current_key": "AIzaSyAMtlOhfur50qU-AfTKFGsI7YxczfW-JDA"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "605775608394-gctbkhps870596a5qqr25g9ck8me1mfi.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }
