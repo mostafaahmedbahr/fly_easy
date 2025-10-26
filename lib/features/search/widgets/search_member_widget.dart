@@ -12,11 +12,19 @@ import 'package:new_fly_easy_new/features/widgets/circle_network_image.dart';
 import 'package:iconly/iconly.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:contacts_service_plus/contacts_service_plus.dart';
 
 class SearchMemberWidget extends StatefulWidget {
-  const SearchMemberWidget({super.key, required this.member,required this.index});
+  const SearchMemberWidget({
+    super.key,
+    required this.member,
+    required this.index,
+    this.contact, // إضافة بارامتر جهة الاتصال فقط
+  });
+
   final MemberModel member;
   final int index;
+  final Contact? contact; // بارامتر اختياري لجهة الاتصال
 
   @override
   State<SearchMemberWidget> createState() => _SearchMemberWidgetState();
@@ -24,14 +32,33 @@ class SearchMemberWidget extends StatefulWidget {
 
 class _SearchMemberWidgetState extends State<SearchMemberWidget> {
   SearchCubit get cubit => SearchCubit.get(context);
-   GlobalKey? _chatIconHint;
-   GlobalKey? _emailIconHint;
+  GlobalKey? _chatIconHint;
+  GlobalKey? _emailIconHint;
 
   @override
   void initState() {
     super.initState();
     _startShowCase();
   }
+
+  // الحصول على الاسم المعروض - اسم جهة الاتصال أولاً ثم اسم الخلفية بين قوسين
+  String get _displayName {
+    if (widget.contact != null) {
+      return "${widget.contact!.displayName} (${widget.member.name})";
+    }
+    return widget.member.name;
+  }
+
+  // الحصول على الهاتف المعروض - يفضل جهة الاتصال أولاً
+  String get _displayPhone {
+    if (widget.contact != null &&
+        widget.contact!.phones != null &&
+        widget.contact!.phones!.isNotEmpty) {
+      return widget.contact!.phones!.first.value ?? widget.member.phone;
+    }
+    return widget.member.phone;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -39,23 +66,36 @@ class _SearchMemberWidgetState extends State<SearchMemberWidget> {
       children: [
         CircleNetworkImage(imageUrl: widget.member.image, width: 45.w),
         SizedBox(width: 10.w,),
-        // Expanded(
-        //   child: Text(
-        //     widget.member.name,
-        //     style: Theme.of(context).textTheme.titleMedium,
-        //   ),
-        // ),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                widget.member.name,
-                style: Theme.of(context).textTheme.titleMedium,
+              // اسم العضو مع إشارة جهة الاتصال إذا وجدت
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _displayName, // استخدام الاسم المعروض الجديد
+                      style: Theme.of(context).textTheme.titleMedium,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  // علامة التحقق الخضراء إذا وجدت جهة اتصال
+                  if (widget.contact != null)
+                    Padding(
+                      padding: EdgeInsets.only(left: 5.w),
+                      child: Icon(
+                        Icons.check_circle,
+                        color: Colors.green,
+                        size: 16.sp,
+                      ),
+                    ),
+                ],
               ),
               SizedBox(height: 3.h,),
               Text(
-                widget.member.phone,
+                _displayPhone, // استخدام الهاتف المعروض الجديد
                 style: Theme.of(context)
                     .textTheme
                     .bodySmall!
@@ -100,8 +140,7 @@ class _SearchMemberWidgetState extends State<SearchMemberWidget> {
         arg: TeamChatInfoModel(
           id: widget.member.id,
           image: widget.member.image,
-          name: widget.member.name,
-
+          name: _displayName, // استخدام الاسم المعروض الجديد
           isTeam: false,
         ));
   }
