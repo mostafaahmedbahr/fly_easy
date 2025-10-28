@@ -65,6 +65,14 @@ class PhoneUtils {
       dev.log('PhoneUtils: allowed ISOs set: $_allowedIsoCodes');
     }
   }
+  static Contact? findContactByPhoneSync(String phone, List<Contact> contacts) {
+    final normalized = normalizePhone(phone);
+    for (final c in contacts) {
+      final phones = c.phones?.map((p) => normalizePhone(p.value ?? '')).toList() ?? [];
+      if (phones.contains(normalized)) return c;
+    }
+    return null;
+  }
 
   /// تنظيف أساسي + استبدال بادئات دولية شائعة
   static String _clean(String input) {

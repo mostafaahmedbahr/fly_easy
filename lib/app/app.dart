@@ -59,7 +59,7 @@ class _MyAppState extends State<MyApp> {
 
   String _getInitialRoute() {
     if (!CacheUtils.isOpenedBefore()) {
-      return Routes.onBoarding;
+      return Routes.welcome;
     } else {
       if (CacheUtils.isLoggedIn()) {
         return Routes.layout;

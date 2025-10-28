@@ -7,8 +7,8 @@ class AppRouter {
 
   Route? generateRoute(RouteSettings settings) {
     switch (settings.name) {
-      case Routes.onBoarding:
-        return _getPageRoute(const OnBoardingScreen());
+      // case Routes.onBoarding:
+      //   return _getPageRoute(const OnBoardingScreen());
       case Routes.welcome:
         return _getPageRoute(const WelcomeScreen());
       case Routes.login:

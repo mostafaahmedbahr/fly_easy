@@ -38,17 +38,35 @@ class _SearchMembersViewState extends State<SearchMembersView>
     _searchCubit = SearchCubit.get(context);
     _globalCubit = GlobalAppCubit.get(context);
 
-    widget.membersPagingController.addPageRequestListener((pageKey) {
-      cubit.getAvailableUsers(widget.membersPagingController, pageKey);
+    widget.membersPagingController.addPageRequestListener((pageKey) async {
+      await _loadFilteredMembers(pageKey);
     });
 
     _initializeData();
   }
 
+  /// 🧠 تحميل البيانات مع فلترة المستخدمين بناءً على الكونتاكتس
+  Future<void> _loadFilteredMembers(int pageKey) async {
+    await cubit.getAvailableUsers(widget.membersPagingController, pageKey);
+
+    // فلترة المستخدمين بعد ما السيرفر يرجعهم
+    final originalList = widget.membersPagingController.itemList ?? [];
+
+    final filteredList = originalList.where((member) {
+      final contact = PhoneUtils.findContactByPhoneSync(
+        member.phone,
+        _globalCubit.allContacts,
+      );
+      return contact != null;
+    }).toList();
+
+    widget.membersPagingController.itemList = filteredList;
+    setState(() {});
+  }
+
   Future<void> _initializeData() async {
     debugPrint("🔄 بدء تحميل البيانات في البحث...");
 
-    // تحميل جهات الاتصال (إن لم تكن جاهزة)
     if (_globalCubit.allContacts.isEmpty) {
       debugPrint("📞 تحميل جهات الاتصال في البحث...");
       await _globalCubit.requestContactsPermission();
@@ -56,31 +74,20 @@ class _SearchMembersViewState extends State<SearchMembersView>
       debugPrint("✅ جهات الاتصال جاهزة مسبقاً في البحث");
     }
 
-    // تحميل الصفحة الأولى من الأعضاء
     debugPrint("👥 تحميل الأعضاء المتاحين...");
-    await cubit.getAvailableUsers(widget.membersPagingController, 1);
+    await _loadFilteredMembers(1);
 
-    // إعطاء وقت بسيط للـ PagingController ليُحدّث بياناته
     await Future.delayed(const Duration(milliseconds: 400));
-
-    if (mounted) {
-      setState(() => _isLoading = false);
-    }
+    if (mounted) setState(() => _isLoading = false);
 
     debugPrint("🎉 انتهى تحميل جميع البيانات في البحث");
   }
 
-  Future<Contact?> _findContact(MemberModel member) async {
-    return PhoneUtils.findContactByPhone(member.phone, _globalCubit.allContacts);
-  }
-
   Future<void> _onRefresh() async {
     setState(() => _isLoading = true);
-    await Future.wait([
-      _globalCubit.reloadContacts(),
-      Future.delayed(const Duration(milliseconds: 600)),
-    ]);
+    await _globalCubit.reloadContacts();
     widget.membersPagingController.refresh();
+    await Future.delayed(const Duration(milliseconds: 500));
     if (mounted) setState(() => _isLoading = false);
   }
 
@@ -108,7 +115,7 @@ class _SearchMembersViewState extends State<SearchMembersView>
             padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 15.h),
             child: SearchField(
               onChange: (value) {
-                debugPrint("بحث عن: $value");
+                debugPrint("🔍 بحث عن: $value");
                 cubit.usersSearchKey = value;
                 widget.membersPagingController.refresh();
               },
@@ -122,20 +129,21 @@ class _SearchMembersViewState extends State<SearchMembersView>
               separatorBuilder: (context, index) => SizedBox(height: 15.h),
               pagingController: widget.membersPagingController,
               builderDelegate: PagedChildBuilderDelegate<MemberModel>(
-                itemBuilder: (context, member, index) => FutureBuilder<Contact?>(
-                  future: _findContact(member),
-                  builder: (_, snapshot) {
-                    final contact = snapshot.data;
-                    return SearchMemberWidget(
-                      member: member,
-                      index: index,
-                      contact: contact, // تمرير جهة الاتصال للويدجت
-                    );
-                  },
-                ),
-                firstPageProgressIndicatorBuilder: (_) => _isLoading
-                    ? _buildLoadingView()
-                    : const Center(child: MyProgress()),
+                itemBuilder: (context, member, index) {
+                  // ✅ دلوقتى إحنا متأكدين إن الرقم ده موجود فى الكونتاكتس
+                  final contact = PhoneUtils.findContactByPhoneSync(
+                    member.phone,
+                    _globalCubit.allContacts,
+                  );
+
+                  return SearchMemberWidget(
+                    member: member,
+                    index: index,
+                    contact: contact,
+                  );
+                },
+                firstPageProgressIndicatorBuilder: (_) =>
+                _isLoading ? _buildLoadingView() : const Center(child: MyProgress()),
                 firstPageErrorIndicatorBuilder: (context) => Center(
                   child: Text('${widget.membersPagingController.error}'),
                 ),
@@ -145,7 +153,8 @@ class _SearchMembersViewState extends State<SearchMembersView>
                     image: AppImages.emptyTeams,
                   ),
                 ),
-                newPageProgressIndicatorBuilder: (_) => const Center(child: MyProgress()),
+                newPageProgressIndicatorBuilder: (_) =>
+                const Center(child: MyProgress()),
               ),
             ),
           ),

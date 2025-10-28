@@ -46,7 +46,7 @@ class _TeamsScreenState extends State<TeamsScreen> with SingleTickerProviderStat
     _joinedTeamsPagingController = cubit.joinedTeamsPagingController;
     _adminTeamsPagingController = cubit.adminTeamsPagingController;
     _archivedTeamsPagingController = cubit.archivedTeamsPagingController;
-    _startShowCase();
+   // _startShowCase();
     // _showAdvSnackBar();
     // _createInterstitialAd();
   }

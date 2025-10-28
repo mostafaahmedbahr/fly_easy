@@ -44,7 +44,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     isDarkMode = CacheUtils.isDarkMode();
-    _startShowCase();
+  //  _startShowCase();
   }
 
   @override
@@ -322,12 +322,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  void _startShowCase() {
-    if (!CacheUtils.isHowToUseHintShown()) {
-      _howToUseHintKey = GlobalKey();
-      WidgetsBinding.instance.addPostFrameCallback(
-          (_) => ShowCaseWidget.of(context).startShowCase([_howToUseHintKey!]));
-      CacheUtils.setHowToUseHint();
-    }
-  }
+  // void _startShowCase() {
+  //   if (!CacheUtils.isHowToUseHintShown()) {
+  //     _howToUseHintKey = GlobalKey();
+  //     WidgetsBinding.instance.addPostFrameCallback(
+  //         (_) => ShowCaseWidget.of(context).startShowCase([_howToUseHintKey!]));
+  //     CacheUtils.setHowToUseHint();
+  //   }
+  // }
 }

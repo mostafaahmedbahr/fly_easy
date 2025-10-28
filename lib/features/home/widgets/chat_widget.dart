@@ -52,7 +52,8 @@ class _ChatWidgetState extends State<ChatWidget> {
   // Get display name - contact name first, then backend name between brackets
   String get _displayName {
     if (widget.contact != null) {
-      return "${widget.contact!.displayName} (${widget.userChat.name})";
+      return "${widget.contact!.displayName}";
+      //return "${widget.contact!.displayName} (${widget.userChat.name})";
     }
     return widget.userChat.name;
   }

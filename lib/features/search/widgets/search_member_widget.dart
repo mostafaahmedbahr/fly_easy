@@ -38,13 +38,14 @@ class _SearchMemberWidgetState extends State<SearchMemberWidget> {
   @override
   void initState() {
     super.initState();
-    _startShowCase();
+   // _startShowCase();
   }
 
   // الحصول على الاسم المعروض - اسم جهة الاتصال أولاً ثم اسم الخلفية بين قوسين
   String get _displayName {
     if (widget.contact != null) {
-      return "${widget.contact!.displayName} (${widget.member.name})";
+      return "${widget.contact!.displayName}";
+     // return "${widget.contact!.displayName} (${widget.member.name})";
     }
     return widget.member.name;
   }
