@@ -50,19 +50,22 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAMtlOhfur50qU-AfTKFGsI7YxczfW-JDA',
-    appId: '1:885827899229:android:909248a08e947dbd6da2b4',
-    messagingSenderId: '885827899229',
-    projectId: 'teams-app-3a45c',
-    storageBucket: 'teams-app-3a45c.firebasestorage.app',
+    apiKey: 'AIzaSyBYH2qOpjQ29Tw3zWUe_zunPCzXVRiYcYM',
+    appId: '1:598254904473:android:57bc045ab1bd6bee90c408',
+    messagingSenderId: '598254904473',
+    projectId: 'teams-layered',
+    databaseURL: 'https://teams-layered-default-rtdb.firebaseio.com',
+    storageBucket: 'teams-layered.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDyQVQd6YAlzKNcp_b3kUvT437gKpFKr94',
-    appId: '1:885827899229:ios:776737e20f23e8ca6da2b4',
-    messagingSenderId: '885827899229',
-    projectId: 'teams-app-3a45c',
-    storageBucket: 'teams-app-3a45c.firebasestorage.app',
-    iosBundleId: 'com.flyEasy.teamsapp',
+    apiKey: 'AIzaSyAmJetar3jy-UASMDB1kq-e59IkaWtWXi8',
+    appId: '1:598254904473:ios:a64891c3322c7d7f90c408',
+    messagingSenderId: '598254904473',
+    projectId: 'teams-layered',
+    databaseURL: 'https://teams-layered-default-rtdb.firebaseio.com',
+    storageBucket: 'teams-layered.appspot.com',
+    iosBundleId: 'com.zerobugs.teamsapp',
   );
+
 }

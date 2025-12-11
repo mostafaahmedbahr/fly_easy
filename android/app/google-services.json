@@ -1,26 +1,80 @@
 {
   "project_info": {
-    "project_number": "885827899229",
-    "project_id": "teams-app-3a45c",
-    "storage_bucket": "teams-app-3a45c.firebasestorage.app"
+    "project_number": "598254904473",
+    "firebase_url": "https://teams-layered-default-rtdb.firebaseio.com",
+    "project_id": "teams-layered",
+    "storage_bucket": "teams-layered.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:885827899229:android:909248a08e947dbd6da2b4",
+        "mobilesdk_app_id": "1:598254904473:android:57bc045ab1bd6bee90c408",
         "android_client_info": {
-          "package_name": "io.flyeasy.teamsapp"
+          "package_name": "com.zerobugs.teamsapp"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "598254904473-h8ot2l4e3ecdpe90do2mbfkb57vhbd1a.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyAMtlOhfur50qU-AfTKFGsI7YxczfW-JDA"
+          "current_key": "AIzaSyBYH2qOpjQ29Tw3zWUe_zunPCzXVRiYcYM"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "598254904473-h8ot2l4e3ecdpe90do2mbfkb57vhbd1a.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "598254904473-d8mhbr40316mq8eqg76hstlgehnnf6ua.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.flyEasy.teamLayered"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:598254904473:android:67176003bd96119a90c408",
+        "android_client_info": {
+          "package_name": "io.io.flyeasy.teamsapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "598254904473-h8ot2l4e3ecdpe90do2mbfkb57vhbd1a.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBYH2qOpjQ29Tw3zWUe_zunPCzXVRiYcYM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "598254904473-h8ot2l4e3ecdpe90do2mbfkb57vhbd1a.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "598254904473-d8mhbr40316mq8eqg76hstlgehnnf6ua.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.flyEasy.teamLayered"
+              }
+            }
+          ]
         }
       }
     }

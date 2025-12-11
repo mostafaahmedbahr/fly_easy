@@ -31,18 +31,22 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   Widget build(BuildContext context) {
     CacheUtils.setIsOpenedBefore();
     return Scaffold(
-      backgroundColor: AppColors.lightSecondaryColor,
+     // backgroundColor: AppColors.lightSecondaryColor,
+      backgroundColor: Colors.white,
       body: SingleChildScrollView(
         padding: EdgeInsets.only(top: 15.h, left: 20.w, right: 20.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            SizedBox(
+              height: 15.h,
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Image.asset(
-                  AppImages.teamsImage,
-                  fit: BoxFit.cover,
+                  "assets/images/logo.png",
+                  fit: BoxFit.contain,
                   height: context.height * .25,
                   width: context.width*.85,
                 ),
@@ -71,7 +75,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               style: TextStyle(
                   fontSize: 22.sp,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white),
+                  color: Colors.black),
             ),
             SizedBox(
               height: 15.h,

@@ -3,17 +3,17 @@
 <plist version="1.0">
 <dict>
 	<key>API_KEY</key>
-	<string>AIzaSyDyQVQd6YAlzKNcp_b3kUvT437gKpFKr94</string>
+	<string>AIzaSyAmJetar3jy-UASMDB1kq-e59IkaWtWXi8</string>
 	<key>GCM_SENDER_ID</key>
-	<string>885827899229</string>
+	<string>598254904473</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.flyEasy.teamsapp</string>
+	<string>io.flyeasy.teamsapp</string>
 	<key>PROJECT_ID</key>
-	<string>teams-app-3a45c</string>
+	<string>teams-layered</string>
 	<key>STORAGE_BUCKET</key>
-	<string>teams-app-3a45c.firebasestorage.app</string>
+	<string>teams-layered.appspot.com</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -25,6 +25,8 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:885827899229:ios:776737e20f23e8ca6da2b4</string>
+	<string>1:598254904473:ios:029214b233971deb90c408</string>
+	<key>DATABASE_URL</key>
+	<string>https://teams-layered-default-rtdb.firebaseio.com</string>
 </dict>
 </plist>
