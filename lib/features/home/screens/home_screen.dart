@@ -1,8 +1,10 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:new_fly_easy_new/app/app_bloc/app_cubit.dart';
 import 'package:new_fly_easy_new/core/cache/cahce_utils.dart';
 import 'package:new_fly_easy_new/core/routing/routes.dart';
@@ -20,8 +22,10 @@ import 'package:new_fly_easy_new/translations/locale_keys.g.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:showcaseview/showcaseview.dart';
 
+import '../../../ad_mob/ad_mob_service.dart';
+
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -35,15 +39,48 @@ class _HomeScreenState extends State<HomeScreen> {
   GlobalKey? _searchHintKey;
   GlobalKey? _notificationsHintKey;
   int _notificationsNum = 0;
-
+  BannerAd? _bannerAd;
+  bool _bannerAdLoaded = false;
   @override
   void initState() {
     super.initState();
   //  _initializeShowHints();
     Future.microtask(() => cubit.getNotificationsCount());
-
+    _createBannerAd();
   }
-
+  void _createBannerAd() {
+    _bannerAd = BannerAd(
+        size: AdSize.fullBanner,
+        adUnitId: AdMobService.bannerAdUnitId!,
+        listener: BannerAdListener(
+          onAdFailedToLoad: (ad, error) {
+            if (kDebugMode) {
+              print(error.message);
+              print(error.responseInfo);
+              print(
+                  'Failed//////////////////////////////////////////////////////');
+            }
+            ad.dispose();
+          },
+          onAdClosed: (ad) {
+            if (kDebugMode) {
+              print(
+                  'Closed//////////////////////////////////////////////////////////');
+            }
+            ad.dispose();
+          },
+          onAdLoaded: (ad) {
+            if (kDebugMode) {
+              print('Loaded');
+            }
+            setState(() {
+              _bannerAdLoaded = true;
+            });
+          },
+        ),
+        request: const AdRequest())
+      ..load();
+  }
   @override
   Widget build(BuildContext context) {
     return BlocListener<HomeCubit, HomeState>(
@@ -53,32 +90,42 @@ class _HomeScreenState extends State<HomeScreen> {
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10.w,vertical: 10.h),
-              child: Column(
-                children: [
-                  RoundedNetworkImage(
-                    width: context.width,
-                    height: 100.h,
-                    radius: 15,
-                    image:
-                        'https://amhere.net/storage/01J807NWN4JXPPB6CXQQWPA6JB.jfif',
-                  ),
-                  // SizedBox(
-                  //   height: 10.h,
-                  // ),
-                  // CustomShowCase(
-                  //   description: AppStrings.searchHint,
-                  //   caseKey: _searchHintKey,
-                  //   child: SearchField(
-                  //     onChange: (value) {},
-                  //     hint: 'hint',
-                  //     isEnabled: false,
-                  //   ),
-                  // ),
-                ],
-              ),
-            ),
+            if (_bannerAdLoaded)
+              Padding(
+                padding: EdgeInsets.only(bottom: 10.h),
+                child: SizedBox(
+                    width: AdSize.fullBanner.width.toDouble(),
+                    height: AdSize.fullBanner.height.toDouble(),
+                    child: AdWidget(ad: _bannerAd!)),
+              )
+            else
+              SizedBox(height: 15.h,),
+            // Padding(
+            //   padding: EdgeInsets.symmetric(horizontal: 10.w,vertical: 10.h),
+            //   child: Column(
+            //     children: [
+            //       RoundedNetworkImage(
+            //         width: context.width,
+            //         height: 100.h,
+            //         radius: 15,
+            //         image:
+            //             'https://amhere.net/storage/01J807NWN4JXPPB6CXQQWPA6JB.jfif',
+            //       ),
+            //       // SizedBox(
+            //       //   height: 10.h,
+            //       // ),
+            //       // CustomShowCase(
+            //       //   description: AppStrings.searchHint,
+            //       //   caseKey: _searchHintKey,
+            //       //   child: SearchField(
+            //       //     onChange: (value) {},
+            //       //     hint: 'hint',
+            //       //     isEnabled: false,
+            //       //   ),
+            //       // ),
+            //     ],
+            //   ),
+            // ),
             Padding(
                 padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
                 child: Text(

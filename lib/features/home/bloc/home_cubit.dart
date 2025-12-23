@@ -100,10 +100,12 @@ class HomeCubit extends Cubit<HomeState> {
       final response=await DioHelper.getData(path: EndPoints.notificationsCount);
       if(response.statusCode==200){
         emit(GetNotificationsCount(response.data['counter']));
+        print("asssssssssssss");
+        print(response.data);
       }
     }catch(error){}
   }
-  
+
   Future<void> resetNotificationsCounter() async {
     try {
       await DioHelper.postData(path: EndPoints.resetNotificationsCount);
