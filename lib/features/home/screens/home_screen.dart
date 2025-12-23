@@ -12,12 +12,10 @@ import 'package:new_fly_easy_new/core/utils/app_extensions.dart';
 import 'package:new_fly_easy_new/core/utils/strings.dart';
 import 'package:new_fly_easy_new/core/widgets/dialog_progress_indicator.dart';
 import 'package:new_fly_easy_new/core/widgets/show_case_widget.dart';
-import 'package:new_fly_easy_new/features/contacts/bloc/contacts_cubit.dart';
 import 'package:new_fly_easy_new/features/home/bloc/home_cubit.dart';
 import 'package:new_fly_easy_new/features/home/models/user_chat_model.dart';
 import 'package:new_fly_easy_new/features/home/widgets/chats_list.dart';
 import 'package:new_fly_easy_new/features/home/widgets/user_image.dart';
-import 'package:new_fly_easy_new/features/widgets/custom_network_image.dart';
 import 'package:new_fly_easy_new/translations/locale_keys.g.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:showcaseview/showcaseview.dart';
@@ -38,7 +36,6 @@ class _HomeScreenState extends State<HomeScreen> {
           firstPageKey: 1, invisibleItemsThreshold: 1);
   GlobalKey? _searchHintKey;
   GlobalKey? _notificationsHintKey;
-  int _notificationsNum = 0;
   BannerAd? _bannerAd;
   bool _bannerAdLoaded = false;
   @override
@@ -176,7 +173,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       listener: (context, state) {
                         if (state is ReceiveTeamNotification ||
                             state is ReceiveUserNotification) {
-                          _notificationsNum++;
+                        //  _notificationsNum++;
+                          cubit.notificationsCount++;
+
                         }
                       },
                       buildWhen: (previous, current) =>
@@ -187,15 +186,19 @@ class _HomeScreenState extends State<HomeScreen> {
                         buildWhen: (previous, current) =>
                             current is GetNotificationsCount,
                         builder: (context, state) => Visibility(
-                          visible: _notificationsNum > 0,
+                          //visible: _notificationsNum > 0,
+                          visible: cubit.notificationsCount > 0,
                           replacement: const SizedBox.shrink(),
                           child: CircleAvatar(
                             backgroundColor: Colors.red,
                             radius: 8,
                             child: Text(
-                              _notificationsNum > 99
+                              // _notificationsNum > 99
+                              //     ? '+99'
+                              //     : '$_notificationsNum',
+                              cubit.notificationsCount > 99
                                   ? '+99'
-                                  : '$_notificationsNum',
+                                  : '${cubit.notificationsCount}',
                               style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 8,
@@ -251,7 +254,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void _resetNotifications() {
     cubit.resetNotificationsCounter();
     setState(() {
-      _notificationsNum = 0;
+      // _notificationsNum = 0;
+      cubit.notificationsCount = 0;
     });
   }
 
@@ -281,7 +285,8 @@ class _HomeScreenState extends State<HomeScreen> {
           .removeWhere((element) => element.id == state.chatId);
       Navigator.of(context, rootNavigator: true).pop();
     } else if (state is GetNotificationsCount) {
-      _notificationsNum = 0;
+      // _notificationsNum = 0;
+      cubit.notificationsCount = 0;
     }
   }
 }

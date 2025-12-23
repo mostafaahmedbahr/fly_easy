@@ -95,20 +95,51 @@ class HomeCubit extends Cubit<HomeState> {
     }
   }
 
-  Future<void>getNotificationsCount()async{
-    try{
-      final response=await DioHelper.getData(path: EndPoints.notificationsCount);
-      if(response.statusCode==200){
-        emit(GetNotificationsCount(response.data['counter']));
-        print("asssssssssssss");
+  // Future<void>getNotificationsCount()async{
+  //   try{
+  //     final response=await DioHelper.getData(path: EndPoints.notificationsCount);
+  //     if(response.statusCode==200){
+  //       emit(GetNotificationsCount(response.data['counter']));
+  //       print("asssssssssssss");
+  //       print(response.data);
+  //     }
+  //   }catch(error){}
+  // }
+
+  // Future<void> resetNotificationsCounter() async {
+  //   try {
+  //     await DioHelper.postData(path: EndPoints.resetNotificationsCount);
+  //   } catch (error) {}
+  // }
+  int notificationsCount = 0;
+
+  /// ================= Notifications =================
+
+  Future<void> getNotificationsCount() async {
+    try {
+      final response =
+      await DioHelper.getData(path: EndPoints.notificationsCount);
+      if (response.statusCode == 200) {
+        print("555555555555555555555555555555");
+        notificationsCount = response.data['counter'];
+        print(notificationsCount);
+        print(response.data['counter']);
         print(response.data);
+        print("125125125");
+        emit(GetNotificationsCount(notificationsCount));
       }
-    }catch(error){}
+    } catch (_) {}
+  }
+  void increaseNotifications() {
+    notificationsCount++;
+    emit(GetNotificationsCount(notificationsCount));
   }
 
   Future<void> resetNotificationsCounter() async {
     try {
       await DioHelper.postData(path: EndPoints.resetNotificationsCount);
-    } catch (error) {}
+      notificationsCount = 0;
+      emit(GetNotificationsCount(0));
+    } catch (_) {}
   }
 }
