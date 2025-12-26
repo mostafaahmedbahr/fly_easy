@@ -1,3 +1,4 @@
+import 'package:contacts_service_plus/contacts_service_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -7,9 +8,10 @@ import 'package:new_fly_easy_new/features/forward_messages/bloc/forward_message_
 import 'package:new_fly_easy_new/features/invite_members/models/member_model.dart';
 
 class ForwardMemberWidget extends StatefulWidget {
-  const ForwardMemberWidget({Key? key, required this.member}) : super(key: key);
+  const ForwardMemberWidget({super.key, required this.member,  this.contact,  this.index});
   final MemberModel member;
-
+  final Contact? contact;
+  final int? index;
   @override
   State<ForwardMemberWidget> createState() => _ForwardMemberWidgetState();
 }
@@ -45,8 +47,7 @@ class _ForwardMemberWidgetState extends State<ForwardMemberWidget> {
           onTap: _onSelect,
           leading: CustomNetworkImage(imageUrl: widget.member.image, width: 40.w),
           title: Text(
-            widget.member.name,
-            style: Theme.of(context).textTheme.titleMedium,
+            widget.contact?.displayName ?? widget.member.name,
           ),
           enableFeedback: true,
           enabled: true,

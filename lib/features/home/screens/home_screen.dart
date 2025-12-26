@@ -284,9 +284,10 @@ class _HomeScreenState extends State<HomeScreen> {
       _chatsPagingController.itemList!
           .removeWhere((element) => element.id == state.chatId);
       Navigator.of(context, rootNavigator: true).pop();
-    } else if (state is GetNotificationsCount) {
-      // _notificationsNum = 0;
-      cubit.notificationsCount = 0;
     }
+    // else if (state is GetNotificationsCount) {
+    //   // _notificationsNum = 0;
+    //   cubit.notificationsCount = 0;
+    // }
   }
 }
