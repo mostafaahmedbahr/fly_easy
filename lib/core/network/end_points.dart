@@ -1,5 +1,6 @@
 abstract class EndPoints {
-  static const baseUrl='https://flyeasy.io/api/v1/';
+  // static const baseUrl='https://flyeasy.io/api/v1/';
+  static const baseUrl='https://flyeasy.wwdigi.it/api/v1/';
 
   static const login = 'login';
   static const register = 'register';
