@@ -1,9 +1,9 @@
 class UserChatModel {
-  final int id;
-  final int userId;
-  final String name;
-  final String image;
-  final String phone;
+  final dynamic id;
+  final dynamic userId;
+  final dynamic name;
+  final dynamic image;
+  final dynamic phone;
 
   final int newMessagesNum;
 

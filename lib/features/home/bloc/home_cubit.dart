@@ -55,10 +55,6 @@ class HomeCubit extends Cubit<HomeState> {
         final Response response = await DioHelper.getData(
             path: EndPoints.recentChats, query: queryParameters);
         if (response.statusCode == 200) {
-          print("mostafa in home screen chats");
-          print("00000000000000000000000000000000000000");
-          print(response.data['data']);
-          print("00000000000000000000000000000000000000");
           List<UserChatModel> list = [];
           response.data['data'].forEach((chat) {
             list.add(UserChatModel.fromJson(chat));
@@ -120,12 +116,7 @@ class HomeCubit extends Cubit<HomeState> {
       final response =
       await DioHelper.getData(path: EndPoints.notificationsCount);
       if (response.statusCode == 200) {
-        print("555555555555555555555555555555");
         notificationsCount = response.data['counter'];
-        print(notificationsCount);
-        print(response.data['counter']);
-        print(response.data);
-        print("125125125");
         emit(GetNotificationsCount(notificationsCount));
       }
     } catch (_) {}
