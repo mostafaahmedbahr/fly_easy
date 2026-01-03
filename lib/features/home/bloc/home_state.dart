@@ -34,3 +34,16 @@ class DeleteChatError extends HomeState {
 
   DeleteChatError(this.error);
 }
+
+class GetHomeBannersLoadingState extends HomeState{}
+class GetHomeBannersSuccessState extends HomeState{
+  final BannersModel bannersModel;
+  GetHomeBannersSuccessState(this.bannersModel);
+
+}
+class GetHomeBannersErrorState extends HomeState{
+  final String error;
+  GetHomeBannersErrorState(this.error);
+}
+
+class ChangeHomeSliderImageState extends HomeState{}

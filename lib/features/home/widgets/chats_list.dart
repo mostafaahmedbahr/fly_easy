@@ -112,6 +112,7 @@ class _ChatsListState extends State<ChatsList> {
               future: _findContact(chat),
               builder: (_, snapshot) {
                 final contact = snapshot.data;
+
                 return Slidable(
                   key: ValueKey(chat.id),
                   startActionPane: ActionPane(

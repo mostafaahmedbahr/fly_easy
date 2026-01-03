@@ -21,6 +21,7 @@ import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:showcaseview/showcaseview.dart';
 
 import '../../../ad_mob/ad_mob_service.dart';
+import '../widgets/home_slider_images.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -43,6 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
   //  _initializeShowHints();
     Future.microtask(() => cubit.getNotificationsCount());
+    context.read<HomeCubit>().getHomeBanners();
     _createBannerAd();
   }
   void _createBannerAd() {
@@ -97,6 +99,8 @@ class _HomeScreenState extends State<HomeScreen> {
               )
             else
               SizedBox(height: 15.h,),
+
+            HomeSliderImages(),
             // Padding(
             //   padding: EdgeInsets.symmetric(horizontal: 10.w,vertical: 10.h),
             //   child: Column(

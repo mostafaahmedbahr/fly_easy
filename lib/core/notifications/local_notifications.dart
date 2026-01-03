@@ -36,10 +36,12 @@ class LocalNotifications with Fcm{
           importance: Importance.max,
           playSound: true,
           priority: Priority.high,
+          fullScreenIntent: true, // 🔥 المهم
         ),
         iOS: DarwinNotificationDetails(
           presentAlert: true,
           presentSound: true,
+
         ));
   }
 

@@ -14,6 +14,8 @@ import 'package:new_fly_easy_new/features/home/models/user_chat_model.dart';
 import 'package:new_fly_easy_new/translations/locale_keys.g.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 
+import '../models/home_banners_model.dart';
+
 part 'home_state.dart';
 
 class HomeCubit extends Cubit<HomeState> {
@@ -133,4 +135,38 @@ class HomeCubit extends Cubit<HomeState> {
       emit(GetNotificationsCount(0));
     } catch (_) {}
   }
+
+
+
+
+
+
+  BannersModel? bannersModel;
+  Future<void> getHomeBanners() async {
+    emit(GetHomeBannersLoadingState());
+
+    try {
+      final response = await DioHelper.getData(
+        path: EndPoints.homeBanners,
+      );
+
+      print(response.data); // للتأكد فقط
+
+      bannersModel = BannersModel.fromJson(response.data);
+
+      emit(GetHomeBannersSuccessState(bannersModel!));
+    } catch (error) {
+      emit(GetHomeBannersErrorState(
+        sl<ErrorModel>().getErrorMessage(error),
+      ));
+    }
+  }
+
+  int currentSliderIndex = 0;
+  changeHomeSliderImages(index)
+  {
+    currentSliderIndex = index;
+    emit(ChangeHomeSliderImageState());
+  }
+
 }

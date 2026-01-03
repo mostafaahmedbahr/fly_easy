@@ -50,4 +50,7 @@ abstract class EndPoints {
   static const deleteNotification = 'notification/delete-notification';
   static const notificationsCount = 'notification/notificationCounter';
   static const resetNotificationsCount = 'notification/resetnotification';
+
+
+  static const homeBanners = 'home-banners';
 }
