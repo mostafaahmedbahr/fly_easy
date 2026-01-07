@@ -23,6 +23,8 @@ import 'package:new_fly_easy_new/translations/locale_keys.g.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:showcaseview/showcaseview.dart';
 
+import '../../home/widgets/home_slider_images.dart';
+
 class TeamsScreen extends StatefulWidget {
   const TeamsScreen({Key? key}) : super(key: key);
 
@@ -65,6 +67,9 @@ class _TeamsScreenState extends State<TeamsScreen> with SingleTickerProviderStat
               tabController: _tabController,
               archiveHintKey: _archiveHintKey,
             ),
+            SizedBox(height: 24,),
+            HomeSliderImages(),
+            SizedBox(height: 12,),
             Expanded(
                 child: TabBarView(
                     physics: const NeverScrollableScrollPhysics(),

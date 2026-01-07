@@ -40,7 +40,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   void initState() {
     super.initState();
     _getInitialNotifications();
-    _showAdvSnackBar();
+      // _showAdvSnackBar();
     _createInterstitialAd();
   }
 

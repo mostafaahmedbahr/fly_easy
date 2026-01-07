@@ -6,9 +6,9 @@ import 'package:new_fly_easy_new/core/cache/cahce_utils.dart';
 import 'package:new_fly_easy_new/core/injection/di_container.dart';
 import 'package:new_fly_easy_new/core/routing/router.dart';
 import 'package:new_fly_easy_new/core/routing/routes.dart';
-import 'package:permission_handler/permission_handler.dart'; // أضف هذا
 
 import '../core/utils/theme.dart';
+import '../features/home/bloc/home_cubit.dart';
 import 'app_bloc/app_cubit.dart';
 
 class MyApp extends StatefulWidget {
@@ -22,10 +22,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -33,8 +30,15 @@ class _MyAppState extends State<MyApp> {
       designSize: const Size(360, 690),
       minTextAdapt: true,
       splitScreenMode: true,
-      builder: (context, child) => BlocProvider(
-        create: (context) => GlobalAppCubit()..requestContactsPermission(),
+      builder: (context, child) => MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (context) => GlobalAppCubit()..requestContactsPermission(),
+          ),
+          BlocProvider(
+            create: (context) => HomeCubit()..getHomeBanners(), // أضفت HomeCubit هنا
+          ),
+        ],
         child: BlocBuilder<GlobalAppCubit, GlobalAppState>(
           builder: (context, state) => MaterialApp(
             debugShowCheckedModeBanner: false,

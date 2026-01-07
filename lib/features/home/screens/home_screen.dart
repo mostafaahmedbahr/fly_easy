@@ -44,7 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
   //  _initializeShowHints();
     Future.microtask(() => cubit.getNotificationsCount());
-    context.read<HomeCubit>().getHomeBanners();
+    // context.read<HomeCubit>().getHomeBanners();
     _createBannerAd();
   }
   void _createBannerAd() {
