@@ -1,7 +1,9 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:new_fly_easy_new/core/utils/app_functions.dart';
 import 'package:new_fly_easy_new/core/utils/enums.dart';
 import 'package:new_fly_easy_new/features/chat/models/chat_video_model.dart';
@@ -17,6 +19,8 @@ import 'package:new_fly_easy_new/features/library/screens/views/videos_view.dart
 import 'package:new_fly_easy_new/features/library/widgets/media_tab_bar.dart';
 import 'package:new_fly_easy_new/translations/locale_keys.g.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
+
+import '../../../ad_mob/ad_mob_service.dart';
 
 class SectionScreen extends StatefulWidget {
   const SectionScreen({Key? key, required this.section}) : super(key: key);
@@ -42,12 +46,14 @@ class _SectionScreenState extends State<SectionScreen>
   final PagingController<int, SoundModel> _soundsPagingController =
       PagingController<int, SoundModel>(
           firstPageKey: 1, invisibleItemsThreshold: 1);
-
+  BannerAd? _bannerAd;
+  bool _bannerAdLoaded = false;
   @override
   void initState() {
     super.initState();
     cubit.sectionId=widget.section.id;
     _tabController = TabController(length: 4, vsync: this);
+    _createBannerAd();
   }
 
   @override
@@ -57,6 +63,7 @@ class _SectionScreenState extends State<SectionScreen>
     _videosPagingController.dispose();
     _soundsPagingController.dispose();
     _filesPagingController.dispose();
+    _bannerAd?.dispose();
   }
 
   @override
@@ -88,7 +95,15 @@ class _SectionScreenState extends State<SectionScreen>
                   VideosView(videosPagingController: _videosPagingController),
                   SoundsView(soundsPagingController: _soundsPagingController),
                   FilesView(filesPagingController: _filesPagingController),
-                ]))
+                ])),
+                (_bannerAdLoaded)
+                    ? SizedBox(
+                    width: AdSize.fullBanner.width.toDouble(),
+                    height: AdSize.fullBanner.height.toDouble(),
+                    child: AdWidget(ad: _bannerAd!))
+                    : SizedBox(
+                  height: 15.h,
+                ),
               ],
             ),
           ),
@@ -100,7 +115,39 @@ class _SectionScreenState extends State<SectionScreen>
   /// ///////////////////////////////////////
   /// ///////// methods /////////////////////
   /// ////////////////////////////////////////
-
+  void _createBannerAd() {
+    _bannerAd = BannerAd(
+        size: AdSize.fullBanner,
+        adUnitId: AdMobService.bannerAdUnitId!,
+        listener: BannerAdListener(
+          onAdFailedToLoad: (ad, error) {
+            if (kDebugMode) {
+              print(error.message);
+              print(error.responseInfo);
+              print(
+                  'Failed//////////////////////////////////////////////////////');
+            }
+            ad.dispose();
+          },
+          onAdClosed: (ad) {
+            if (kDebugMode) {
+              print(
+                  'Closed//////////////////////////////////////////////////////////');
+            }
+            ad.dispose();
+          },
+          onAdLoaded: (ad) {
+            if (kDebugMode) {
+              print('Loaded');
+            }
+            setState(() {
+              _bannerAdLoaded = true;
+            });
+          },
+        ),
+        request: const AdRequest())
+      ..load();
+  }
   AppBar _appBar() => AppBar(
         title: Text(widget.section.name),
         centerTitle: true,

@@ -41,16 +41,16 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     LocaleKeys.adv_space.tr(),
                     style: Theme.of(context).textTheme.titleLarge!.copyWith(fontSize: 14.sp),
                   )),
-              if (_bannerAdLoaded)
-                Padding(
-                  padding: EdgeInsets.only(bottom: 10.h),
-                  child: SizedBox(
-                      width: AdSize.fullBanner.width.toDouble(),
-                      height: AdSize.fullBanner.height.toDouble(),
-                      child: AdWidget(ad: _bannerAd!)),
-                )
-              else
-                 SizedBox(height: 15.h,),
+              // if (_bannerAdLoaded)
+              //   Padding(
+              //     padding: EdgeInsets.only(bottom: 10.h),
+              //     child: SizedBox(
+              //         width: AdSize.fullBanner.width.toDouble(),
+              //         height: AdSize.fullBanner.height.toDouble(),
+              //         child: AdWidget(ad: _bannerAd!)),
+              //   )
+              // else
+              //    SizedBox(height: 15.h,),
               const Expanded(child: SectionsView()),
             ],
           )),

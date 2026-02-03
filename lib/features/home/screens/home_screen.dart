@@ -44,7 +44,10 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
   //  _initializeShowHints();
     Future.microtask(() => cubit.getNotificationsCount());
-    // context.read<HomeCubit>().getHomeBanners();
+
+
+
+   context.read<HomeCubit>().getHomeBanners();
     _createBannerAd();
   }
   void _createBannerAd() {
@@ -89,16 +92,16 @@ class _HomeScreenState extends State<HomeScreen> {
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (_bannerAdLoaded)
-              Padding(
-                padding: EdgeInsets.only(bottom: 10.h),
-                child: SizedBox(
-                    width: AdSize.fullBanner.width.toDouble(),
-                    height: AdSize.fullBanner.height.toDouble(),
-                    child: AdWidget(ad: _bannerAd!)),
-              )
-            else
-              SizedBox(height: 15.h,),
+            // if (_bannerAdLoaded)
+            //   Padding(
+            //     padding: EdgeInsets.only(bottom: 10.h),
+            //     child: SizedBox(
+            //         width: AdSize.fullBanner.width.toDouble(),
+            //         height: AdSize.fullBanner.height.toDouble(),
+            //         child: AdWidget(ad: _bannerAd!)),
+            //   )
+            // else
+              SizedBox(height: 12.h,),
 
             HomeSliderImages(),
             // Padding(

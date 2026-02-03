@@ -1,8 +1,10 @@
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:new_fly_easy_new/core/hive/hive_utils.dart';
 import 'package:new_fly_easy_new/core/utils/app_extensions.dart';
 import 'package:new_fly_easy_new/core/utils/app_functions.dart';
@@ -17,6 +19,8 @@ import 'package:new_fly_easy_new/features/widgets/custom_button.dart';
 import 'package:new_fly_easy_new/features/widgets/custom_text_field.dart';
 import 'package:new_fly_easy_new/translations/locale_keys.g.dart';
 import 'package:iconly/iconly.dart';
+
+import '../../../ad_mob/ad_mob_service.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({Key? key, required this.profileCubit})
@@ -35,7 +39,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final TextEditingController workIdController = TextEditingController();
   final TextEditingController companyController = TextEditingController();
   late String name, phone,countryCode,workId,company;
-
+  BannerAd? _bannerAd;
+  bool _bannerAdLoaded = false;
   @override
   void initState() {
     super.initState();
@@ -44,6 +49,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     workIdController.text=HiveUtils.getUserData()!.workId??'';
     companyController.text=HiveUtils.getUserData()!.company??'';
     countryCode=HiveUtils.getUserData()!.countryCode;
+    _createBannerAd();
   }
 
   @override
@@ -146,7 +152,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         color: Colors.white,
                       )
                           :  ButtonText(title: LocaleKeys.update.tr())),
-                )
+                ),
+                (_bannerAdLoaded)
+                    ? SizedBox(
+                    width: AdSize.fullBanner.width.toDouble(),
+                    height: AdSize.fullBanner.height.toDouble(),
+                    child: AdWidget(ad: _bannerAd!))
+                    : SizedBox(
+                  height: 15.h,
+                ),
               ],
             ),
           ),
@@ -161,6 +175,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     nameController.dispose();
     phoneController.dispose();
     workIdController.dispose();
+    _bannerAd?.dispose();
   }
 
   /// /////////////////////////////////////////
@@ -174,6 +189,39 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         icon: const Icon(Icons.arrow_back_ios)),
   );
 
+  void _createBannerAd() {
+    _bannerAd = BannerAd(
+        size: AdSize.fullBanner,
+        adUnitId: AdMobService.bannerAdUnitId!,
+        listener: BannerAdListener(
+          onAdFailedToLoad: (ad, error) {
+            if (kDebugMode) {
+              print(error.message);
+              print(error.responseInfo);
+              print(
+                  'Failed//////////////////////////////////////////////////////');
+            }
+            ad.dispose();
+          },
+          onAdClosed: (ad) {
+            if (kDebugMode) {
+              print(
+                  'Closed//////////////////////////////////////////////////////////');
+            }
+            ad.dispose();
+          },
+          onAdLoaded: (ad) {
+            if (kDebugMode) {
+              print('Loaded');
+            }
+            setState(() {
+              _bannerAdLoaded = true;
+            });
+          },
+        ),
+        request: const AdRequest())
+      ..load();
+  }
   /// /////////////////////////////////////////////////
   /// //////////////// Helper Methods ////////////////
   /// ///////////////////////////////////////////////
