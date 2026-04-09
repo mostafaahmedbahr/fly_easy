@@ -1,5 +1,6 @@
 import 'package:contacts_service_plus/contacts_service_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -65,22 +66,22 @@ class _SearchMembersViewState extends State<SearchMembersView>
   }
 
   Future<void> _initializeData() async {
-    debugPrint("🔄 بدء تحميل البيانات في البحث...");
+    if (kDebugMode) debugPrint("🔄 بدء تحميل البيانات في البحث...");
 
     if (_globalCubit.allContacts.isEmpty) {
-      debugPrint("📞 تحميل جهات الاتصال في البحث...");
+      if (kDebugMode) debugPrint("📞 تحميل جهات الاتصال في البحث...");
       await _globalCubit.requestContactsPermission();
     } else {
-      debugPrint("✅ جهات الاتصال جاهزة مسبقاً في البحث");
+      if (kDebugMode) debugPrint("✅ جهات الاتصال جاهزة مسبقاً في البحث");
     }
 
-    debugPrint("👥 تحميل الأعضاء المتاحين...");
+    if (kDebugMode) debugPrint("👥 تحميل الأعضاء المتاحين...");
     await _loadFilteredMembers(1);
 
     await Future.delayed(const Duration(milliseconds: 400));
     if (mounted) setState(() => _isLoading = false);
 
-    debugPrint("🎉 انتهى تحميل جميع البيانات في البحث");
+    if (kDebugMode) debugPrint("🎉 انتهى تحميل جميع البيانات في البحث");
   }
 
   Future<void> _onRefresh() async {
@@ -115,7 +116,7 @@ class _SearchMembersViewState extends State<SearchMembersView>
             padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 15.h),
             child: SearchField(
               onChange: (value) {
-                debugPrint("🔍 بحث عن: $value");
+                if (kDebugMode) debugPrint("🔍 بحث عن: $value");
                 cubit.usersSearchKey = value;
                 widget.membersPagingController.refresh();
               },
@@ -125,7 +126,11 @@ class _SearchMembersViewState extends State<SearchMembersView>
           Expanded(
             child: PagedListView.separated(
               padding: EdgeInsets.only(
-                  left: 15.w, right: 15.w, bottom: 30.h, top: 10.h),
+                left: 15.w,
+                right: 15.w,
+                bottom: 30.h,
+                top: 10.h,
+              ),
               separatorBuilder: (context, index) => SizedBox(height: 15.h),
               pagingController: widget.membersPagingController,
               builderDelegate: PagedChildBuilderDelegate<MemberModel>(
@@ -142,8 +147,9 @@ class _SearchMembersViewState extends State<SearchMembersView>
                     contact: contact,
                   );
                 },
-                firstPageProgressIndicatorBuilder: (_) =>
-                _isLoading ? _buildLoadingView() : const Center(child: MyProgress()),
+                firstPageProgressIndicatorBuilder: (_) => _isLoading
+                    ? _buildLoadingView()
+                    : const Center(child: MyProgress()),
                 firstPageErrorIndicatorBuilder: (context) => Center(
                   child: Text('${widget.membersPagingController.error}'),
                 ),
@@ -154,7 +160,7 @@ class _SearchMembersViewState extends State<SearchMembersView>
                   ),
                 ),
                 newPageProgressIndicatorBuilder: (_) =>
-                const Center(child: MyProgress()),
+                    const Center(child: MyProgress()),
               ),
             ),
           ),

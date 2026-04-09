@@ -1,6 +1,7 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -26,10 +27,7 @@ import '../../contacts/bloc/contacts_cubit.dart';
 import 'call_screen.dart';
 
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({
-    Key? key,
-    required this.chatInfo,
-  }) : super(key: key);
+  const ChatScreen({Key? key, required this.chatInfo}) : super(key: key);
   final TeamChatInfoModel chatInfo;
 
   @override
@@ -52,12 +50,16 @@ class _ChatScreenState extends State<ChatScreen>
     if (widget.chatInfo.isTeam) {
       cubit.teamId = widget.chatInfo.id.toString();
       cubit.getTeamMessages();
-      GlobalAppCubit.get(context).clearTeamChatNotifications(widget.chatInfo.id);
+      GlobalAppCubit.get(
+        context,
+      ).clearTeamChatNotifications(widget.chatInfo.id);
     } else {
       cubit.userId = widget.chatInfo.id.toString();
       cubit.getUserMessages();
       GlobalAppCubit.get(context).clearUserChatNotifications(
-          widget.chatInfo.id, widget.chatInfo.userChatId);
+        widget.chatInfo.id,
+        widget.chatInfo.userChatId,
+      );
     }
     _scrollController.addListener(_scrollListener);
     getGetUsersInChat();
@@ -76,10 +78,7 @@ class _ChatScreenState extends State<ChatScreen>
     });
     for (var element in userIdsList) {
       zegoUserIdList.add(
-        ZegoCallUser(
-          element['id'].toString(),
-          element['name'].toString(),
-        ),
+        ZegoCallUser(element['id'].toString(), element['name'].toString()),
       );
     }
   }
@@ -101,10 +100,9 @@ class _ChatScreenState extends State<ChatScreen>
           body: Column(
             children: [
               Expanded(
-                  child: MessagesList(
-                scrollController: _scrollController,
-              )),
-              const LowerSection()
+                child: MessagesList(scrollController: _scrollController),
+              ),
+              const LowerSection(),
             ],
           ),
         ),
@@ -146,15 +144,17 @@ class _ChatScreenState extends State<ChatScreen>
       isScrollControlled: true,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(40.r), topRight: Radius.circular(40.r))),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(40.r),
+          topRight: Radius.circular(40.r),
+        ),
+      ),
       builder: (context) => FractionallySizedBox(
         heightFactor: .8,
         child: BlocProvider(
-            create: (context) => ChatMediaCubit(),
-            child: ChatSettingsScreen(
-              teamId: cubit.teamId!,
-            )),
+          create: (context) => ChatMediaCubit(),
+          child: ChatSettingsScreen(teamId: cubit.teamId!),
+        ),
       ),
     );
   }
@@ -165,15 +165,17 @@ class _ChatScreenState extends State<ChatScreen>
       isScrollControlled: true,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(40.r), topRight: Radius.circular(40.r))),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(40.r),
+          topRight: Radius.circular(40.r),
+        ),
+      ),
       builder: (context) => FractionallySizedBox(
         heightFactor: .8,
         child: BlocProvider(
-            create: (context) => UserChatMediaCubit(),
-            child: UserChatSettingsScreen(
-              userId: widget.chatInfo.id,
-            )),
+          create: (context) => UserChatMediaCubit(),
+          child: UserChatSettingsScreen(userId: widget.chatInfo.id),
+        ),
       ),
     );
   }
@@ -191,8 +193,9 @@ class _ChatScreenState extends State<ChatScreen>
         Permission.photos,
       ].request(); //import 'package:permission_handler/permission_handler.dart';
 
-      havePermission =
-          request.values.every((status) => status == PermissionStatus.granted);
+      havePermission = request.values.every(
+        (status) => status == PermissionStatus.granted,
+      );
     } else {
       final status = await Permission.storage.request();
       havePermission = status.isGranted;
@@ -223,117 +226,112 @@ class _ChatScreenState extends State<ChatScreen>
   /// /////////// Helper Widgets ///////////
   /// //////////////////////////////////////
   AppBar _appBar() => AppBar(
-        backgroundColor: theme.cardColor,
-        elevation: 2,
-        leading: IconButton(
-            onPressed: () => context.pop(),
-            icon: Icon(
-              Icons.arrow_back,
-              color: Theme.of(context).primaryColor,
-              size: 22.sp,
-            )),
-        leadingWidth: 40.w,
-        title: GestureDetector(
-          onTap: () {
-            if (widget.chatInfo.isTeam) {
-              _showTeamSettingsScreen();
-            } else {
-              _showUserChatSettingsScreen();
-            }
-          },
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              CircleAvatar(
-                radius: 20.w,
-                backgroundColor: Colors.grey.withOpacity(.5),
-                backgroundImage:
-                    CachedNetworkImageProvider(widget.chatInfo.image),
-              ),
-              SizedBox(
-                width: 8.w,
-              ),
-              Expanded(
-                child: Column(
-                  children: [
-                    Text(
-                      widget.chatInfo.name,
-                      style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                          fontSize: 16.sp, fontWeight: FontWeight.w700),
-                    ),
-                    // SizedBox(
-                    //   height: 3.h,
-                    // ),
-                    // Text(
-                    //   widget.chatInfo.communityName,
-                    //   style: Theme.of(context)
-                    //       .textTheme
-                    //       .bodyMedium!
-                    //       .copyWith(fontSize: 13.sp, fontWeight: FontWeight.w700),
-                    // )
-                  ],
-                ),
-              )
-            ],
+    backgroundColor: theme.cardColor,
+    elevation: 2,
+    leading: IconButton(
+      onPressed: () => context.pop(),
+      icon: Icon(
+        Icons.arrow_back,
+        color: Theme.of(context).primaryColor,
+        size: 22.sp,
+      ),
+    ),
+    leadingWidth: 40.w,
+    title: GestureDetector(
+      onTap: () {
+        if (widget.chatInfo.isTeam) {
+          _showTeamSettingsScreen();
+        } else {
+          _showUserChatSettingsScreen();
+        }
+      },
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          CircleAvatar(
+            radius: 20.w,
+            backgroundColor: Colors.grey.withOpacity(.5),
+            backgroundImage: CachedNetworkImageProvider(widget.chatInfo.image),
           ),
-        ),
-        actions: [
-          IconButton(
-              onPressed: () {
-                zegoUIKitPrebuiltCallController
-                    .sendCallInvitation(
-                      resourceID: "new_fly_easy_new",
-                      invitees: widget.chatInfo.isTeam
-                          ? zegoUserIdList
-                          : [
-                              ZegoCallUser(
-                                widget.chatInfo.id.toString(),
-                                widget.chatInfo.name.toString(),
-                              )
-                            ],
-                      isVideoCall: false,
-                      callID: widget.chatInfo.id.toString(),
-                    )
-                    .then((value) => print(value))
-                    .catchError((e) {});
-              },
-              icon: Icon(
-                IconlyLight.call,
-                size: 22.sp,
-              )),
-          IconButton(
-            onPressed: () {
-              zegoUIKitPrebuiltCallController
-                  .sendCallInvitation(
-                    resourceID: "new_fly_easy_new",
-                    invitees: widget.chatInfo.isTeam
-                        ? zegoUserIdList
-                        : [
-                            ZegoCallUser(
-                              widget.chatInfo.id.toString(),
-                              widget.chatInfo.name.toString(),
-                            )
-                          ],
-                    isVideoCall: true,
-                    callID: widget.chatInfo.id.toString(),
-                  )
-                  .then((value) {
-                print("invitation");
-                print(value);
-              })
-                  .catchError((e) {
-                    print("invitation error");
-                    print(e);
-              });
-            },
-            icon: Icon(
-              IconlyLight.video,
-              size: 22.sp,
+          SizedBox(width: 8.w),
+          Expanded(
+            child: Column(
+              children: [
+                Text(
+                  widget.chatInfo.name,
+                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                // SizedBox(
+                //   height: 3.h,
+                // ),
+                // Text(
+                //   widget.chatInfo.communityName,
+                //   style: Theme.of(context)
+                //       .textTheme
+                //       .bodyMedium!
+                //       .copyWith(fontSize: 13.sp, fontWeight: FontWeight.w700),
+                // )
+              ],
             ),
           ),
-          SizedBox(
-            width: 5.w,
-          ),
         ],
-      );
+      ),
+    ),
+    actions: [
+      IconButton(
+        onPressed: () {
+          zegoUIKitPrebuiltCallController
+              .sendCallInvitation(
+                resourceID: "new_fly_easy_new",
+                invitees: widget.chatInfo.isTeam
+                    ? zegoUserIdList
+                    : [
+                        ZegoCallUser(
+                          widget.chatInfo.id.toString(),
+                          widget.chatInfo.name.toString(),
+                        ),
+                      ],
+                isVideoCall: false,
+                callID: widget.chatInfo.id.toString(),
+              )
+              .then((value) {
+                if (kDebugMode) print(value);
+              })
+              .catchError((e) {});
+        },
+        icon: Icon(IconlyLight.call, size: 22.sp),
+      ),
+      IconButton(
+        onPressed: () {
+          zegoUIKitPrebuiltCallController
+              .sendCallInvitation(
+                resourceID: "new_fly_easy_new",
+                invitees: widget.chatInfo.isTeam
+                    ? zegoUserIdList
+                    : [
+                        ZegoCallUser(
+                          widget.chatInfo.id.toString(),
+                          widget.chatInfo.name.toString(),
+                        ),
+                      ],
+                isVideoCall: true,
+                callID: widget.chatInfo.id.toString(),
+              )
+              .then((value) {
+                if (kDebugMode) print("invitation");
+                if (kDebugMode) print(value);
+              })
+              .catchError((e) {
+                if (kDebugMode) print("invitation error");
+                if (kDebugMode) print(e);
+              });
+        },
+        icon: Icon(IconlyLight.video, size: 22.sp),
+      ),
+      SizedBox(width: 5.w),
+    ],
+  );
 }

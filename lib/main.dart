@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -26,6 +27,7 @@ import "package:zego_uikit/src/components/audio_video_container/layout.dart";
 import 'package:app_settings/app_settings.dart';
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+
 Future<void> openDisplayPermission() async {
   final packageInfo = await PackageInfo.fromPlatform();
 
@@ -36,6 +38,7 @@ Future<void> openDisplayPermission() async {
 
   await intent.launch();
 }
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   openDisplayPermission();
@@ -45,20 +48,18 @@ Future<void> main() async {
   );
   MobileAds.instance.initialize();
   await EasyLocalization.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // AppSettings.openAppSettings(type: AppSettingsType.settings, asAnotherTask: true);
   // // AppSettings.openAppSettings(
-  // //
-  // // );
-// Get token with error handling
+  //
+  // );
+  // Get token with error handling
   String? token = await FirebaseMessaging.instance.getToken();
 
   if (token == null) {
-    print('Failed to get FCM token - check Google Play Services');
+    if (kDebugMode)
+      print('Failed to get FCM token - check Google Play Services');
   }
   initializeDateFormatting();
   ServiceLocator().init();
@@ -78,8 +79,10 @@ Future<void> main() async {
   //     [ZegoUIKitSignalingPlugin()],
   //   );
   // });
-  
-  ZegoUIKitPrebuiltCallInvitationService().setNavigatorKey(sl<AppRouter>().navigatorKey);
+
+  ZegoUIKitPrebuiltCallInvitationService().setNavigatorKey(
+    sl<AppRouter>().navigatorKey,
+  );
   if (CacheUtils.isLoggedIn()) {
     ZegoUIKitPrebuiltCallInvitationService().init(
       // androidNotificationConfig: ZegoAndroidNotificationConfig(
@@ -91,21 +94,19 @@ Future<void> main() async {
       userID: HiveUtils.getUserData()!.id.toString(),
       userName: HiveUtils.getUserData()!.name,
       // controller: zegoUIKitPrebuiltCallController,
-      plugins: [
-        ZegoUIKitSignalingPlugin(),
-      ],
+      plugins: [ZegoUIKitSignalingPlugin()],
       // notifyWhenAppRunningInBackgroundOrQuit: true,
-      ringtoneConfig:  ZegoCallRingtoneConfig(
+      ringtoneConfig: ZegoCallRingtoneConfig(
         incomingCallPath: "assets/sounds/ringTone.mp3",
       ),
       requireConfig: (ZegoCallInvitationData data) {
         var config = (data.invitees.length > 1)
             ? ZegoCallInvitationType.videoCall == data.type
-                ? ZegoUIKitPrebuiltCallConfig.groupVideoCall()
-                : ZegoUIKitPrebuiltCallConfig.groupVoiceCall()
+                  ? ZegoUIKitPrebuiltCallConfig.groupVideoCall()
+                  : ZegoUIKitPrebuiltCallConfig.groupVoiceCall()
             : ZegoCallInvitationType.videoCall == data.type
-                ? ZegoUIKitPrebuiltCallConfig.oneOnOneVideoCall()
-                : ZegoUIKitPrebuiltCallConfig.oneOnOneVoiceCall();
+            ? ZegoUIKitPrebuiltCallConfig.oneOnOneVideoCall()
+            : ZegoUIKitPrebuiltCallConfig.oneOnOneVoiceCall();
         // Modify your custom configurations here.
         config.layout = ZegoLayout.gallery(
           addBorderRadiusAndSpacingBetweenView: false,
@@ -115,16 +116,19 @@ Future<void> main() async {
     );
   }
   Bloc.observer = MyBlocObserver();
-  runApp(EasyLocalization(
+  runApp(
+    EasyLocalization(
       supportedLocales: const [
         Locale('en'),
         Locale('ar'),
         Locale('fr'),
         Locale('de'),
-        Locale('es')
+        Locale('es'),
       ],
       path: 'assets/translations',
       fallbackLocale: const Locale('en'),
       startLocale: const Locale('en'),
-      child: const MyApp()));
+      child: const MyApp(),
+    ),
+  );
 }

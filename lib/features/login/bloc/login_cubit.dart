@@ -34,9 +34,6 @@ class LoginCubit extends Cubit<LoginState> {
     if (await sl<InternetStatus>().checkConnectivity()) {
       try {
         var deviceToken = await _getDeviceToken();
-        print("deviceToken");
-        print("cEfiLIN28UQGqFDfltC96i:APA91bH4nQXzV1uC5dU7AZdhO5QRZGXDpJ-35k4jIlCyYPNHwl8Qp-zk01PpDTCmSen1bg_GVETeJ8FuaH9PhPmlvCX0x70XJpmxZ7Cvc0miyRWQN0v4jzPeO6MSQyHoWMWrMrKs4P54");
-        print(deviceToken);
         final response = await DioHelper.postData(path: EndPoints.login, data: {
           'email': email,
           'password': password,

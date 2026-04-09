@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:new_fly_easy_new/core/injection/di_container.dart';
 import 'package:new_fly_easy_new/core/network/connection.dart';
@@ -16,76 +17,80 @@ part 'search_state.dart';
 class SearchCubit extends Cubit<SearchState> {
   SearchCubit() : super(SearchInitial());
 
-  static SearchCubit get(BuildContext context)=>BlocProvider.of<SearchCubit>(context);
+  static SearchCubit get(BuildContext context) =>
+      BlocProvider.of<SearchCubit>(context);
 
   static const _pageSize = 15;
 
   String? currentTeamId, currentUserId;
 
-
   String? usersSearchKey;
   Future<void> getAvailableUsers(
-      PagingController<int, MemberModel> membersPagingController,
-      int pageKey) async {
-    print("111111111111");
+    PagingController<int, MemberModel> membersPagingController,
+    int pageKey,
+  ) async {
+    if (kDebugMode) print("111111111111");
     if (await sl<InternetStatus>().checkConnectivity()) {
-      print("22222222222");
+      if (kDebugMode) print("22222222222");
       try {
         final Map<String, dynamic> queryParameters = {
           'page': pageKey,
-          'search':usersSearchKey,
+          'search': usersSearchKey,
         };
-        print("333333333333");
+        if (kDebugMode) print("333333333333");
         final Response response = await DioHelper.getData(
-            path: EndPoints.myContacts, query: queryParameters);
-        print("44444444444");
+          path: EndPoints.myContacts,
+          query: queryParameters,
+        );
+        if (kDebugMode) print("44444444444");
         if (response.statusCode == 200) {
-          print("55555555555555");
-          print(response.data['data']);
+          if (kDebugMode) print("55555555555555");
+          if (kDebugMode) print(response.data['data']);
           List<MemberModel> list = [];
           response.data['data'].forEach((team) {
             list.add(MemberModel.fromJson(team));
           });
-          print("666666666666");
+          if (kDebugMode) print("666666666666");
           final isLastPage = response.data['data'].length < _pageSize;
-          print("77777777777777");
+          if (kDebugMode) print("77777777777777");
           if (isLastPage) {
-            print("888888888888");
+            if (kDebugMode) print("888888888888");
             membersPagingController.appendLastPage(list);
           } else {
-            print("99999999999");
+            if (kDebugMode) print("99999999999");
             final num nextPageKey = pageKey + 1;
             membersPagingController.appendPage(list, nextPageKey as int);
           }
         }
       } catch (error) {
-        print("1000000000000000000");
+        if (kDebugMode) print("1000000000000000000");
         String errorMessage = sl<ErrorModel>().getErrorMessage(error);
         membersPagingController.error = errorMessage;
         emit(ErrorState(errorMessage));
       }
     } else {
-      print("1100000000000000000000000");
+      if (kDebugMode) print("1100000000000000000000000");
       emit(ErrorState(AppStrings.checkInternet));
     }
   }
 
-
   List<TeamModel> myTeams = [];
   String? teamsSearchKey;
-  Future<void> getMyTeams(PagingController<int, TeamModel> teamsPagingController, int pageKey) async {
+  Future<void> getMyTeams(
+    PagingController<int, TeamModel> teamsPagingController,
+    int pageKey,
+  ) async {
     if (await sl<InternetStatus>().checkConnectivity()) {
       try {
-
         final Map<String, dynamic> queryParameters = {
           'page': pageKey,
-          'search':teamsSearchKey,
+          'search': teamsSearchKey,
         };
         final Response response = await DioHelper.getData(
-            path: EndPoints.allTeams, query: queryParameters);
+          path: EndPoints.allTeams,
+          query: queryParameters,
+        );
         if (response.statusCode == 200) {
-
-
           List<TeamModel> list = [];
           response.data['data'].forEach((team) {
             list.add(TeamModel.fromJson(team));

@@ -1,12 +1,16 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:new_fly_easy_new/features/chat/bloc/chat_cubit.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class SeenWidget extends StatefulWidget {
-  const SeenWidget(
-      {Key? key, required this.messageId, required this.isSeen, this.color})
-      : super(key: key);
+  const SeenWidget({
+    Key? key,
+    required this.messageId,
+    required this.isSeen,
+    this.color,
+  }) : super(key: key);
   final Color? color;
   final String messageId;
   final bool isSeen;
@@ -31,7 +35,7 @@ class _SeenWidgetState extends State<SeenWidget> {
           current is UpdateMessageState &&
           current.messageId == widget.messageId,
       listener: (context, state) {
-        print('listen////////////////////////');
+        if (kDebugMode) print('listen////////////////////////');
         if (state is UpdateMessageState) {
           seen = true;
         }
@@ -42,13 +46,14 @@ class _SeenWidgetState extends State<SeenWidget> {
       builder: (context, state) => Align(
         alignment: AlignmentDirectional.bottomEnd,
         child: Visibility(
-            visible: seen,
-            replacement: const SizedBox.shrink(),
-            child:  Icon(
-              FontAwesomeIcons.checkDouble,
-              size: 15,
-              color:widget.color??Colors.white,
-            )),
+          visible: seen,
+          replacement: const SizedBox.shrink(),
+          child: Icon(
+            FontAwesomeIcons.checkDouble,
+            size: 15,
+            color: widget.color ?? Colors.white,
+          ),
+        ),
       ),
     );
   }
