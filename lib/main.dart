@@ -19,11 +19,26 @@ import 'package:new_fly_easy_new/firebase_options.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/date_symbol_data_local.dart';
+// import 'package:permission_handler/permission_handler.dart' as AppSettings;
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 import 'package:zego_uikit_signaling_plugin/zego_uikit_signaling_plugin.dart';
 import "package:zego_uikit/src/components/audio_video_container/layout.dart";
+import 'package:app_settings/app_settings.dart';
+import 'package:android_intent_plus/android_intent.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+Future<void> openDisplayPermission() async {
+  final packageInfo = await PackageInfo.fromPlatform();
+
+  final intent = AndroidIntent(
+    action: 'android.settings.action.MANAGE_OVERLAY_PERMISSION',
+    data: 'package:${packageInfo.packageName}',
+  );
+
+  await intent.launch();
+}
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  openDisplayPermission();
   SystemChrome.setEnabledSystemUIMode(
     SystemUiMode.manual,
     overlays: [SystemUiOverlay.bottom, SystemUiOverlay.top],
@@ -34,6 +49,11 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
+
+  // AppSettings.openAppSettings(type: AppSettingsType.settings, asAnotherTask: true);
+  // // AppSettings.openAppSettings(
+  // //
+  // // );
 // Get token with error handling
   String? token = await FirebaseMessaging.instance.getToken();
 
@@ -48,6 +68,7 @@ Future<void> main() async {
   await CacheHelper.init();
   await Hive.initFlutter();
   await HiveInitializer.initializeHive();
+
   Future.delayed(
     const Duration(milliseconds: 1500),
     () => FlutterNativeSplash.remove(),
