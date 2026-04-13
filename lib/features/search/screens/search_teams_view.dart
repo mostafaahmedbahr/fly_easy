@@ -13,7 +13,8 @@ import 'package:new_fly_easy_new/translations/locale_keys.g.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 
 class SearchTeamView extends StatefulWidget {
-  const SearchTeamView({Key? key,required this.teamsPagingController}) : super(key: key);
+  const SearchTeamView({Key? key, required this.teamsPagingController})
+    : super(key: key);
   final PagingController<int, TeamModel> teamsPagingController;
 
   @override
@@ -45,40 +46,37 @@ class _SearchTeamViewState extends State<SearchTeamView>
       child: Column(
         children: [
           Padding(
-              padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 15.h),
-              child: SearchField(
-                  onChange: (value) {
-                    cubit.teamsSearchKey = value;
-                    widget.teamsPagingController.refresh();
-                  },
-                  hint: LocaleKeys.search_for_teams.tr())),
+            padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 15.h),
+            child: SearchField(
+              onChange: (value) {
+                cubit.teamsSearchKey = value;
+                widget.teamsPagingController.refresh();
+              },
+              hint: LocaleKeys.search_for_teams.tr(),
+            ),
+          ),
           Expanded(
             child: PagedListView.separated(
-              padding: EdgeInsets.only(
-                left: 15.w,
-                right: 15.w,
-                bottom: 30.h,
-              ),
-              separatorBuilder: (context, index) => SizedBox(
-                height: 15.h,
-              ),
+              padding: EdgeInsets.only(left: 15.w, right: 15.w, bottom: 30.h),
+              separatorBuilder: (context, index) => SizedBox(height: 15.h),
               pagingController: widget.teamsPagingController,
               builderDelegate: PagedChildBuilderDelegate<TeamModel>(
-                  itemBuilder: (context, item, index) =>
-                      SearchTeamWidget(team: item),
-                  firstPageProgressIndicatorBuilder: (_) =>
-                      const Center(child: MyProgress()),
-                  firstPageErrorIndicatorBuilder: (context) {
-                    return Center(
-                        child: Text('${widget.teamsPagingController.error}'));
-                  },
-                  noItemsFoundIndicatorBuilder: (context) => const Center(
-                        child:
-                            EmptyWidget(text: '', image: AppImages.emptyTeams),
-                        // EmptyWidget(text: 'You have not any notifications'),
-                      ),
-                  newPageProgressIndicatorBuilder: (_) =>
-                      const Center(child: MyProgress())),
+                itemBuilder: (context, item, index) =>
+                    SearchTeamWidget(team: item),
+                firstPageProgressIndicatorBuilder: (_) =>
+                    const Center(child: MyProgress()),
+                firstPageErrorIndicatorBuilder: (context) {
+                  return Center(
+                    child: Text('${widget.teamsPagingController.error}'),
+                  );
+                },
+                noItemsFoundIndicatorBuilder: (context) => const Center(
+                  child: EmptyWidget(text: '', image: AppImages.emptyTeams),
+                  // EmptyWidget(text: 'You have not any notifications'),
+                ),
+                newPageProgressIndicatorBuilder: (_) =>
+                    const Center(child: MyProgress()),
+              ),
             ),
           ),
         ],

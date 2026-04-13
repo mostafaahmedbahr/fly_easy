@@ -93,6 +93,37 @@ Future<void> main() async {
           'f053c726dd8a0d08b2e7183517d8b26d3e7626193c0a72906f722ddd2339c82a' /*input your AppSign*/,
       userID: HiveUtils.getUserData()!.id.toString(),
       userName: HiveUtils.getUserData()!.name,
+      config: ZegoCallInvitationConfig(
+        endCallWhenInitiatorLeave: true,
+        missedCall: ZegoCallInvitationMissedCallConfig(
+          enabled: true,
+          enableDialBack : true,
+        ),
+      ),
+      invitationEvents: ZegoUIKitPrebuiltCallInvitationEvents(
+        onIncomingCallTimeout: (
+            String callID,
+            ZegoCallUser caller
+            ) {},
+        onIncomingMissedCallClicked: (
+            String callID,
+            ZegoCallUser caller,
+            ZegoCallInvitationType callType,
+            List<ZegoCallUser> callees,
+            String customData,
+
+            /// The default action is to dial back the missed call
+            Future<void> Function() defaultAction,
+            ) async {
+          /// Add your custom logic here.
+
+          await defaultAction.call();
+        },
+
+        onIncomingMissedCallDialBackFailed: () {
+          /// Add your custom logic here.
+        },
+      ),
       // controller: zegoUIKitPrebuiltCallController,
       plugins: [ZegoUIKitSignalingPlugin()],
       // notifyWhenAppRunningInBackgroundOrQuit: true,

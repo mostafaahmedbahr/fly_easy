@@ -195,6 +195,37 @@ class _OtpScreenState extends State<OtpScreen> {
         userID: HiveUtils.getUserData()!.id.toString(),
         userName:HiveUtils.getUserData()!.name,
         plugins: [ZegoUIKitSignalingPlugin()],
+        config: ZegoCallInvitationConfig(
+          endCallWhenInitiatorLeave: true,
+          missedCall: ZegoCallInvitationMissedCallConfig(
+            enabled: true,
+              enableDialBack : true,
+          ),
+        ),
+        invitationEvents: ZegoUIKitPrebuiltCallInvitationEvents(
+          onIncomingCallTimeout: (
+              String callID,
+              ZegoCallUser caller
+              ) {},
+          onIncomingMissedCallClicked: (
+              String callID,
+              ZegoCallUser caller,
+              ZegoCallInvitationType callType,
+              List<ZegoCallUser> callees,
+              String customData,
+
+              /// The default action is to dial back the missed call
+              Future<void> Function() defaultAction,
+              ) async {
+            /// Add your custom logic here.
+
+            await defaultAction.call();
+          },
+
+          onIncomingMissedCallDialBackFailed: () {
+            /// Add your custom logic here.
+          },
+        ),
         ringtoneConfig:  ZegoCallRingtoneConfig(
           incomingCallPath: "assets/sounds/ringTone.mp3",
           outgoingCallPath: "assets/sounds/ringTone.mp3",

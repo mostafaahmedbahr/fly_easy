@@ -145,6 +145,37 @@ class _LoginScreenState extends State<LoginScreen> {
                                   incomingCallPath: "assets/sounds/ringTone.mp3",
                                   outgoingCallPath: "assets/sounds/ringTone.mp3",
                                 ),
+                                config: ZegoCallInvitationConfig(
+                                  endCallWhenInitiatorLeave: true,
+                                  missedCall: ZegoCallInvitationMissedCallConfig(
+                                    enabled: true,
+                                    enableDialBack : true,
+                                  ),
+                                ),
+                                invitationEvents: ZegoUIKitPrebuiltCallInvitationEvents(
+                                  onIncomingCallTimeout: (
+                                      String callID,
+                                      ZegoCallUser caller
+                                      ) {},
+                                  onIncomingMissedCallClicked: (
+                                      String callID,
+                                      ZegoCallUser caller,
+                                      ZegoCallInvitationType callType,
+                                      List<ZegoCallUser> callees,
+                                      String customData,
+
+                                      /// The default action is to dial back the missed call
+                                      Future<void> Function() defaultAction,
+                                      ) async {
+                                    /// Add your custom logic here.
+
+                                    await defaultAction.call();
+                                  },
+
+                                  onIncomingMissedCallDialBackFailed: () {
+                                    /// Add your custom logic here.
+                                  },
+                                ),
                                 requireConfig: (ZegoCallInvitationData data) {
                                   var config = (data.invitees.length > 1)
                                       ? ZegoCallInvitationType.videoCall == data.type
