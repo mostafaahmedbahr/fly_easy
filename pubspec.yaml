@@ -91,8 +91,8 @@ dependencies:
   flutter_cache_manager: ^3.4.1
   syncfusion_flutter_pdfviewer: ^30.2.7
   firebase_messaging: ^16.0.1
-  zego_uikit_prebuilt_call: ^4.16.12
-  zego_uikit_signaling_plugin: ^2.8.6
+  zego_uikit_prebuilt_call: ^4.22.4
+  zego_uikit_signaling_plugin: ^2.8.20
   flutter_local_notifications: ^18.0.0
   google_mobile_ads: ^4.0.0
   mobile_scanner: ^7.0.1

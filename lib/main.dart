@@ -85,6 +85,18 @@ Future<void> main() async {
   );
   if (CacheUtils.isLoggedIn()) {
     ZegoUIKitPrebuiltCallInvitationService().init(
+      notificationConfig: ZegoCallInvitationNotificationConfig(
+        androidNotificationConfig: ZegoCallAndroidNotificationConfig(
+          callIDVisibility: true,
+          showOnFullScreen: true,
+          showOnLockedScreen: true,
+          // channelID: "zego_call_channel",
+          // channelName: "Zego Calls",
+        ),
+        iOSNotificationConfig: ZegoCallIOSNotificationConfig(
+          isSandboxEnvironment: true,
+        ),
+      ),
       // androidNotificationConfig: ZegoAndroidNotificationConfig(
       //   sound: "zego_incoming",
       // ),

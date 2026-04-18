@@ -134,6 +134,18 @@ class _LoginScreenState extends State<LoginScreen> {
                                 // androidNotificationConfig: ZegoAndroidNotificationConfig(
                                 //   sound: "zego_incoming",
                                 // ),
+                                notificationConfig: ZegoCallInvitationNotificationConfig(
+                                  androidNotificationConfig: ZegoCallAndroidNotificationConfig(
+                                    callIDVisibility: true,
+                                    showOnFullScreen: true,
+                                    showOnLockedScreen: true,
+                                    // channelID: "zego_call_channel",
+                                    // channelName: "Zego Calls",
+                                  ),
+                                  iOSNotificationConfig: ZegoCallIOSNotificationConfig(
+                                    isSandboxEnvironment: true,
+                                  ),
+                                ),
                                 appID:  1812799240/*input your AppID*/,
                                 appSign: 'f053c726dd8a0d08b2e7183517d8b26d3e7626193c0a72906f722ddd2339c82a' /*input your AppSign*/,
                                 userID: state.userId,

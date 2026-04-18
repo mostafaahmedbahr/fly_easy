@@ -190,6 +190,18 @@ class _OtpScreenState extends State<OtpScreen> {
   void _blocListener(BuildContext context, OtpState state) {
     if (state is SubmitOtpSuccess) {
       ZegoUIKitPrebuiltCallInvitationService().init(
+        notificationConfig: ZegoCallInvitationNotificationConfig(
+          androidNotificationConfig: ZegoCallAndroidNotificationConfig(
+            callIDVisibility: true,
+            showOnFullScreen: true,
+            showOnLockedScreen: true,
+            // channelID: "zego_call_channel",
+            // channelName: "Zego Calls",
+          ),
+          iOSNotificationConfig: ZegoCallIOSNotificationConfig(
+            isSandboxEnvironment: true,
+          ),
+        ),
         appID:  1812799240/*input your AppID*/,
         appSign: 'f053c726dd8a0d08b2e7183517d8b26d3e7626193c0a72906f722ddd2339c82a' /*input your AppSign*/,
         userID: HiveUtils.getUserData()!.id.toString(),
