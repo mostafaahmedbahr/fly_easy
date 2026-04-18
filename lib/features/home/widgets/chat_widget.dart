@@ -11,6 +11,10 @@ import 'package:new_fly_easy_new/features/home/widgets/user_chat_image.dart';
 import 'package:new_fly_easy_new/translations/locale_keys.g.dart';
 import 'package:iconly/iconly.dart';
 import 'package:contacts_service_plus/contacts_service_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../../../core/utils/strings.dart';
+import '../../../core/widgets/show_case_widget.dart';
 
 class ChatWidget extends StatefulWidget {
   const ChatWidget({
@@ -57,7 +61,7 @@ class _ChatWidgetState extends State<ChatWidget> {
     }
     return widget.userChat.name;
   }
-
+  GlobalKey? _emailIconHint;
   // Get display phone - show phone number if available
   String? get _displayPhone {
     if (widget.contact != null &&
@@ -175,7 +179,6 @@ class _ChatWidgetState extends State<ChatWidget> {
                               SizedBox(width: 5.w),
                             ],
                           ),
-
                         IconButton(
                           icon: const Icon(IconlyLight.chat),
                           onPressed: () {
@@ -191,7 +194,24 @@ class _ChatWidgetState extends State<ChatWidget> {
                               notificationsNum = 0;
                             });
                           },
-                        )
+                        ),
+                        SizedBox(width: 5.w,),
+                        CustomShowCase(
+                          description:AppStrings.sendEmailHint,
+                          caseKey: _emailIconHint,
+                          child: IconButton(
+                              onPressed: () {
+                                final Uri emailLaunchUri = Uri(
+                                  scheme: 'mailto',
+                                  path: widget.userChat.email,
+                                );
+                                launchUrl(emailLaunchUri);
+                              },
+                              icon: Icon(
+                                Icons.email_outlined,
+                                color: Theme.of(context).iconTheme.color,
+                              )),
+                        ),
                       ],
                     )
                   ],
