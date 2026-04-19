@@ -23,7 +23,7 @@ import 'package:iconly/iconly.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 
-import '../../contacts/bloc/contacts_cubit.dart';
+import '../../../core/utils/colors.dart';
 import 'call_screen.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -39,13 +39,11 @@ class _ChatScreenState extends State<ChatScreen>
   ThemeData get theme => Theme.of(context);
 
   ChatCubit get cubit => ChatCubit.get(context);
-  ContactsCubit get contactsCubit => ContactsCubit.get(context);
   final ScrollController _scrollController = ScrollController();
   bool _getMoreData = false;
 
   @override
   void initState() {
-    Future.microtask(() => contactsCubit.getContacts());
     cubit.soundPlayer = AudioPlayer();
     if (widget.chatInfo.isTeam) {
       cubit.teamId = widget.chatInfo.id.toString();
@@ -84,6 +82,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   List<ZegoCallUser> zegoUserIdList = [];
+  List<Map<String, dynamic>> selectedCallers = [];
 
   @override
   Widget build(BuildContext context) {
@@ -180,6 +179,159 @@ class _ChatScreenState extends State<ChatScreen>
     );
   }
 
+  void _showCallerSelectionDialog(bool isVideoCall) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(
+                isVideoCall
+                    ? 'Select Video Call Participants'
+                    : 'Select Voice Call Participants',
+                style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+              ),
+              content: SizedBox(
+                width: 300.w,
+                height: 400.h,
+                child: Column(
+                  children: [
+                    Text(
+                      'Maximum 4 participants allowed',
+                      style: TextStyle(fontSize: 14.sp, color: Colors.grey),
+                    ),
+                    SizedBox(height: 20.h),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: userIdsList.length,
+                        itemBuilder: (context, index) {
+                          final user = userIdsList[index];
+                          final isSelected = selectedCallers.any(
+                            (caller) => caller['id'] == user['id'],
+                          );
+
+                          return CheckboxListTile(
+                            activeColor: AppColors
+                                .lightAppBarIcon, // Blue color when selected
+                            checkColor: Colors.white, // White checkmark
+                            title: Text(
+                              user['name'],
+                              style: TextStyle(fontSize: 16.sp),
+                            ),
+                            subtitle: Text(
+                              'ID: ${user['id']}',
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            value: isSelected,
+                            onChanged: (bool? value) {
+                              setState(() {
+                                if (value == true) {
+                                  if (selectedCallers.length < 4) {
+                                    selectedCallers.add(user);
+                                  } else {
+                                    // Show alert dialog instead of SnackBar
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        title: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.warning,
+                                              color: Colors.red,
+                                              size: 24,
+                                            ),
+                                            SizedBox(width: 10),
+                                            Text('تنبيه'),
+                                          ],
+                                        ),
+                                        content: Text(
+                                          'لا يمكنك اختيار أكثر من 4 أشخاص',
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.of(context).pop(),
+                                            child: Text('موافق'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
+                                } else {
+                                  selectedCallers.removeWhere(
+                                    (caller) => caller['id'] == user['id'],
+                                  );
+                                }
+                              });
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                    SizedBox(height: 20.h),
+                    Text(
+                      'Selected: ${selectedCallers.length}/4',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: selectedCallers.isEmpty
+                      ? null
+                      : () {
+                          Navigator.of(context).pop();
+                          _makeCall(selectedCallers, isVideoCall);
+                          setState(() {
+                            selectedCallers.clear();
+                          });
+                        },
+                  child: Text('Call'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _makeCall(List<Map<String, dynamic>> callers, bool isVideoCall) {
+    final List<ZegoCallUser> invitees = callers.map((caller) {
+      return ZegoCallUser(caller['id'].toString(), caller['name'].toString());
+    }).toList();
+
+    zegoUIKitPrebuiltCallController
+        .sendCallInvitation(
+          resourceID: "new_fly_easy_new",
+          invitees: invitees,
+          isVideoCall: isVideoCall,
+          callID: widget.chatInfo.id.toString(),
+        )
+        .then((value) {
+          if (kDebugMode) print("invitation");
+          if (kDebugMode) print(value);
+        })
+        .catchError((e) {
+          if (kDebugMode) print("invitation error");
+          if (kDebugMode) print(e);
+        });
+  }
+
   Future<bool> _askStoragePermission() async {
     final DeviceInfoPlugin info =
         DeviceInfoPlugin(); // import 'package:device_info_plus/device_info_plus.dart';
@@ -250,7 +402,7 @@ class _ChatScreenState extends State<ChatScreen>
         children: [
           CircleAvatar(
             radius: 20.w,
-            backgroundColor: Colors.grey.withOpacity(.5),
+            backgroundColor: Colors.grey.withValues(alpha: .5),
             backgroundImage: CachedNetworkImageProvider(widget.chatInfo.image),
           ),
           SizedBox(width: 8.w),
@@ -283,51 +435,27 @@ class _ChatScreenState extends State<ChatScreen>
     actions: [
       IconButton(
         onPressed: () {
-          zegoUIKitPrebuiltCallController
-              .sendCallInvitation(
-                resourceID: "new_fly_easy_new",
-                invitees: widget.chatInfo.isTeam
-                    ? zegoUserIdList
-                    : [
-                        ZegoCallUser(
-                          widget.chatInfo.id.toString(),
-                          widget.chatInfo.name.toString(),
-                        ),
-                      ],
-                isVideoCall: false,
-                callID: widget.chatInfo.id.toString(),
-              )
-              .then((value) {
-                if (kDebugMode) print(value);
-              })
-              .catchError((e) {});
+          if (widget.chatInfo.isTeam) {
+            _showCallerSelectionDialog(false); // Voice call
+          } else {
+            // For individual chat, call directly
+            _makeCall([
+              {"id": widget.chatInfo.id, "name": widget.chatInfo.name},
+            ], false);
+          }
         },
         icon: Icon(IconlyLight.call, size: 22.sp),
       ),
       IconButton(
         onPressed: () {
-          zegoUIKitPrebuiltCallController
-              .sendCallInvitation(
-                resourceID: "new_fly_easy_new",
-                invitees: widget.chatInfo.isTeam
-                    ? zegoUserIdList
-                    : [
-                        ZegoCallUser(
-                          widget.chatInfo.id.toString(),
-                          widget.chatInfo.name.toString(),
-                        ),
-                      ],
-                isVideoCall: true,
-                callID: widget.chatInfo.id.toString(),
-              )
-              .then((value) {
-                if (kDebugMode) print("invitation");
-                if (kDebugMode) print(value);
-              })
-              .catchError((e) {
-                if (kDebugMode) print("invitation error");
-                if (kDebugMode) print(e);
-              });
+          if (widget.chatInfo.isTeam) {
+            _showCallerSelectionDialog(true); // Video call
+          } else {
+            // For individual chat, call directly
+            _makeCall([
+              {"id": widget.chatInfo.id, "name": widget.chatInfo.name},
+            ], true);
+          }
         },
         icon: Icon(IconlyLight.video, size: 22.sp),
       ),

@@ -109,28 +109,26 @@ Future<void> main() async {
         endCallWhenInitiatorLeave: true,
         missedCall: ZegoCallInvitationMissedCallConfig(
           enabled: true,
-          enableDialBack : true,
+          enableDialBack: true,
         ),
       ),
       invitationEvents: ZegoUIKitPrebuiltCallInvitationEvents(
-        onIncomingCallTimeout: (
-            String callID,
-            ZegoCallUser caller
-            ) {},
-        onIncomingMissedCallClicked: (
-            String callID,
-            ZegoCallUser caller,
-            ZegoCallInvitationType callType,
-            List<ZegoCallUser> callees,
-            String customData,
+        onIncomingCallTimeout: (String callID, ZegoCallUser caller) {},
+        onIncomingMissedCallClicked:
+            (
+              String callID,
+              ZegoCallUser caller,
+              ZegoCallInvitationType callType,
+              List<ZegoCallUser> callees,
+              String customData,
 
-            /// The default action is to dial back the missed call
-            Future<void> Function() defaultAction,
+              /// The default action is to dial back the missed call
+              Future<void> Function() defaultAction,
             ) async {
-          /// Add your custom logic here.
+              /// Add your custom logic here.
 
-          await defaultAction.call();
-        },
+              await defaultAction.call();
+            },
 
         onIncomingMissedCallDialBackFailed: () {
           /// Add your custom logic here.

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dio/dio.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:new_fly_easy_new/core/hive/hive_utils.dart';
 import 'package:new_fly_easy_new/core/injection/di_container.dart';
@@ -47,15 +48,17 @@ class HomeCubit extends Cubit<HomeState> {
 
   static const _pageSize = 15;
 
-  Future<void> getChatsNew(int pageKey,
-      PagingController<int, UserChatModel> pagingController) async {
+  Future<void> getChatsNew(
+    int pageKey,
+    PagingController<int, UserChatModel> pagingController,
+  ) async {
     if (await sl<InternetStatus>().checkConnectivity()) {
       try {
-        final Map<String, dynamic> queryParameters = {
-          'page': pageKey,
-        };
+        final Map<String, dynamic> queryParameters = {'page': pageKey};
         final Response response = await DioHelper.getData(
-            path: EndPoints.recentChats, query: queryParameters);
+          path: EndPoints.recentChats,
+          query: queryParameters,
+        );
         if (response.statusCode == 200) {
           List<UserChatModel> list = [];
           response.data['data'].forEach((chat) {
@@ -74,7 +77,7 @@ class HomeCubit extends Cubit<HomeState> {
         pagingController.error = errorMessage;
         emit(GetChatsError(errorMessage));
       }
-    }else{
+    } else {
       String errorMessage = LocaleKeys.check_internet.tr();
       pagingController.error = errorMessage;
     }
@@ -84,7 +87,8 @@ class HomeCubit extends Cubit<HomeState> {
     emit(DeleteChatLoad());
     try {
       final response = await DioHelper.postData(
-          path: '${EndPoints.deleteRecentChat}/$chatId');
+        path: '${EndPoints.deleteRecentChat}/$chatId',
+      );
       if (response.statusCode == 200) {
         emit(DeleteChatSuccess(chatId));
       }
@@ -115,14 +119,23 @@ class HomeCubit extends Cubit<HomeState> {
 
   Future<void> getNotificationsCount() async {
     try {
-      final response =
-      await DioHelper.getData(path: EndPoints.notificationsCount);
+      final response = await DioHelper.getData(
+        path: EndPoints.notificationsCount,
+      );
+      if (kDebugMode) {
+        print('🔔 Notifications API Response: ${response.data}');
+        print('🔔 Status Code: ${response.statusCode}');
+      }
       if (response.statusCode == 200) {
         notificationsCount = response.data['counter'];
+        if (kDebugMode) print('🔔 Notifications Count: $notificationsCount');
         emit(GetNotificationsCount(notificationsCount));
       }
-    } catch (_) {}
+    } catch (e) {
+      if (kDebugMode) print('🔔 Error getting notifications: $e');
+    }
   }
+
   void increaseNotifications() {
     notificationsCount++;
     emit(GetNotificationsCount(notificationsCount));
@@ -136,19 +149,12 @@ class HomeCubit extends Cubit<HomeState> {
     } catch (_) {}
   }
 
-
-
-
-
-
   BannersModel? bannersModel;
   Future<void> getHomeBanners() async {
     emit(GetHomeBannersLoadingState());
 
     try {
-      final response = await DioHelper.getData(
-        path: EndPoints.homeBanners,
-      );
+      final response = await DioHelper.getData(path: EndPoints.homeBanners);
 
       print(response.data); // للتأكد فقط
 
@@ -156,17 +162,13 @@ class HomeCubit extends Cubit<HomeState> {
 
       emit(GetHomeBannersSuccessState(bannersModel!));
     } catch (error) {
-      emit(GetHomeBannersErrorState(
-        sl<ErrorModel>().getErrorMessage(error),
-      ));
+      emit(GetHomeBannersErrorState(sl<ErrorModel>().getErrorMessage(error)));
     }
   }
 
   int currentSliderIndex = 0;
-  changeHomeSliderImages(index)
-  {
+  changeHomeSliderImages(index) {
     currentSliderIndex = index;
     emit(ChangeHomeSliderImageState());
   }
-
 }
