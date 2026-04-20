@@ -109,6 +109,7 @@ dependencies:
   app_settings:
   android_intent_plus: ^6.0.0
   package_info_plus:
+  zego_zpns:
 
 
 

@@ -42,12 +42,32 @@
 
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+
     <application
         android:label="TeamsApp"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
         android:requestLegacyExternalStorage="true"
         android:usesCleartextTraffic="true">
+        
+        <!-- Zego Cloud Services for offline calls -->
+        <service
+            android:name="com.zegocloud.zego_uikit_plugin.ZegoIncomingCallPluginService"
+            android:foregroundServiceType="mediaProjection"
+            android:exported="true"
+            android:enabled="true" />
+        <service
+            android:name="com.zegocloud.zego_uikit_plugin.ZegoNotificationService"
+            android:foregroundServiceType="mediaProjection"
+            android:exported="true"
+            android:enabled="true" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -90,8 +90,8 @@ Future<void> main() async {
           callIDVisibility: true,
           showOnFullScreen: true,
           showOnLockedScreen: true,
-          // channelID: "zego_call_channel",
-          // channelName: "Zego Calls",
+          channelID: "zego_call_channel",
+          channelName: "Zego Calls",
         ),
         iOSNotificationConfig: ZegoCallIOSNotificationConfig(
           isSandboxEnvironment: true,

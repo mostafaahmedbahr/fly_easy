@@ -54,6 +54,14 @@ android {
             signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true // أضف هذا
             isShrinkResources = true // أضف هذا
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            proguardFiles(
+                getDefaultProguardFile("proguard-android.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }
@@ -71,4 +79,14 @@ dependencies {
     // For AGP 4.0 to 7.2
     // coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.9'
     implementation("androidx.core:core:1.9.0") // أضف هذا السطر
+
+    //Introduce Firebase BoM
+    implementation  ("com.google.firebase:firebase-bom:31.0.2")
+
+// Add dependencies for Firebase SDK for Google Analytics and FCM.
+// When using BoM, do not specify the version in the Firebase dependency
+    implementation ("com.google.firebase:firebase-analytics")
+    implementation ("com.google.firebase:firebase-messaging:23.2.1")
+    implementation ("im.zego:zpns-fcm:2.8.0") //ZPNs package for Google FCM push
+
 }
