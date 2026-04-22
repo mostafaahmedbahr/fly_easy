@@ -90,3 +90,8 @@ dependencies {
     implementation ("im.zego:zpns-fcm:2.8.0") //ZPNs package for Google FCM push
 
 }
+configurations.all {
+    resolutionStrategy {
+        force("com.google.code.gson:gson:2.11.0")
+    }
+}
