@@ -46,8 +46,9 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     //  _initializeShowHints();
-    if (kDebugMode)
+    if (kDebugMode) {
       print('🏠 Home Screen: Initializing notifications count...');
+    }
     Future.microtask(() => cubit.getNotificationsCount());
 
     context.read<HomeCubit>().getHomeBanners();

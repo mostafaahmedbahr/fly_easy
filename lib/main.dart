@@ -20,13 +20,14 @@ import 'package:new_fly_easy_new/firebase_options.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/date_symbol_data_local.dart';
-// import 'package:permission_handler/permission_handler.dart' as AppSettings;
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 import 'package:zego_uikit_signaling_plugin/zego_uikit_signaling_plugin.dart';
 import "package:zego_uikit/src/components/audio_video_container/layout.dart";
 import 'package:app_settings/app_settings.dart';
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:zego_uikit/zego_uikit.dart';
 
 Future<void> openDisplayPermission() async {
   final packageInfo = await PackageInfo.fromPlatform();
@@ -37,6 +38,34 @@ Future<void> openDisplayPermission() async {
   );
 
   await intent.launch();
+}
+
+Future<void> _requestNotificationPermissions() async {
+  try {
+    // Check notification permission status
+    PermissionStatus status = await Permission.notification.status;
+
+    if (status != PermissionStatus.granted) {
+      if (kDebugMode) print('Requesting notification permissions...');
+
+      // Request notification permission
+      status = await Permission.notification.request();
+
+      if (status.isGranted) {
+        if (kDebugMode) print('Notification permissions granted');
+      } else if (status.isPermanentlyDenied) {
+        if (kDebugMode) print('Notification permissions permanently denied');
+        // Optionally open app settings
+        // await openAppSettings();
+      } else {
+        if (kDebugMode) print('Notification permissions denied');
+      }
+    } else {
+      if (kDebugMode) print('Notification permissions already granted');
+    }
+  } catch (e) {
+    if (kDebugMode) print('Error requesting notification permissions: $e');
+  }
 }
 
 Future<void> main() async {
@@ -83,7 +112,10 @@ Future<void> main() async {
   ZegoUIKitPrebuiltCallInvitationService().setNavigatorKey(
     sl<AppRouter>().navigatorKey,
   );
+
+  // Request notification permissions before Zego initialization
   if (CacheUtils.isLoggedIn()) {
+    await _requestNotificationPermissions();
     ZegoUIKitPrebuiltCallInvitationService().init(
       notificationConfig: ZegoCallInvitationNotificationConfig(
         androidNotificationConfig: ZegoCallAndroidNotificationConfig(
