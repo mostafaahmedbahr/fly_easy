@@ -144,7 +144,6 @@ Future<void> main() async {
 
   await HiveInitializer.initializeHive();
 
-
   DioHelper.init();
   await openDisplayPermission();
 
@@ -178,10 +177,6 @@ Future<void> main() async {
   }
 
   initializeDateFormatting();
-
-
-
-
 
   Future.delayed(
     const Duration(milliseconds: 1500),
