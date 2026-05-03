@@ -43,6 +43,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'package:permission_handler/permission_handler.dart';
+import 'package:zego_uikit/zego_uikit.dart';
 
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 
@@ -184,15 +185,15 @@ Future<void> main() async {
     () => FlutterNativeSplash.remove(),
   );
 
-  // ZegoUIKit().initLog().then((value) {
+  ZegoUIKit().initLog().then((value) {
 
-  //   ZegoUIKitPrebuiltCallInvitationService().useSystemCallingUI(
+    ZegoUIKitPrebuiltCallInvitationService().useSystemCallingUI(
 
-  //     [ZegoUIKitSignalingPlugin()],
+      [ZegoUIKitSignalingPlugin()],
 
-  //   );
+    );
 
-  // });
+  });
 
   ZegoUIKitPrebuiltCallInvitationService().setNavigatorKey(
     sl<AppRouter>().navigatorKey,
