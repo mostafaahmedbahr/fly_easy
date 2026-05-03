@@ -41,6 +41,11 @@ class ChatCubit extends Cubit<ChatState> {
   String? teamId;
   String? userId;
   final List<MessageModel> messages = [];
+  AudioPlayer? soundPlayer;
+
+  Future<void> _makeSound() async {
+    soundPlayer!.play(AssetSource('sounds/message.mp3'));
+  }
 
   // Clear all messages when opening a new chat
   void clearMessages() {
@@ -52,29 +57,137 @@ class ChatCubit extends Cubit<ChatState> {
     isInitial = true;
   }
 
-  Future<void> sendTeamTextMessage(MessageModel textMessage) async {
+  // Leave team chat methods - Simple implementation
+  Future<void> leaveTeamChat(int teamId) async {
     try {
-      final doc = FirebaseFirestore.instance
-          .collection(FirebaseKeys.teams)
-          .doc(teamId)
-          .collection(FirebaseKeys.chat)
-          .doc();
-      doc.set(textMessage.toJson(doc.id));
-      sendTeamNotification();
-      messages.insert(0, textMessage);
-      if (textMessage.type == MessageType.link.name) {
-        saveTeamLinks(textMessage);
-      }
-      emit(SendMessage());
+      emit(LeaveChatLoad());
+      // Just emit success for now - the UI will handle the read-only state
+      emit(LeaveChatSuccess());
     } catch (error) {
-      emit(ErrorState(sl<ErrorModel>().getErrorMessage(error)));
+      emit(ErrorState(error.toString()));
     }
   }
 
-  AudioPlayer? soundPlayer;
+  Future<void> leaveAndDeleteTeamChat(int teamId) async {
+    try {
+      emit(LeaveChatLoad());
+      // Just emit success for now - navigation will handle removal
+      emit(LeaveChatSuccess());
+    } catch (error) {
+      emit(ErrorState(error.toString()));
+    }
+  }
 
-  Future<void> _makeSound() async {
-    soundPlayer!.play(AssetSource('sounds/message.mp3'));
+  // Leave user chat methods - Simple implementation
+  Future<void> leaveUserChat(int userId) async {
+    try {
+      emit(LeaveChatLoad());
+      // Just emit success for now - the UI will handle the read-only state
+      emit(LeaveChatSuccess());
+    } catch (error) {
+      emit(ErrorState(error.toString()));
+    }
+  }
+
+  Future<void> leaveAndDeleteUserChat(int userId) async {
+    try {
+      emit(LeaveChatLoad());
+      // Just emit success for now - navigation will handle removal
+      emit(LeaveChatSuccess());
+    } catch (error) {
+      emit(ErrorState(error.toString()));
+    }
+  }
+
+  // Check if user has left a team - Simple implementation
+  Future<bool> hasUserLeftTeam(int teamId) async {
+    // For now, always return false - leave status will be managed locally
+    return false;
+  }
+
+  // Check if user has left a user chat - Simple implementation
+  Future<bool> hasUserLeftChat(int userId) async {
+    // For now, always return false - leave status will be managed locally
+    return false;
+  }
+
+  // Create team with proper member management
+  Future<void> createTeam({
+    required String teamName,
+    required String teamImage,
+    required String description,
+    required List<int> memberIds,
+  }) async {
+    try {
+      emit(GetMessagesLoad());
+      final currentUserId = HiveUtils.getUserData()!.id;
+
+      // Create team document
+      final teamRef = FirebaseFirestore.instance
+          .collection(FirebaseKeys.teams)
+          .doc();
+
+      final teamData = {
+        FirebaseKeys.teamId: teamRef.id,
+        FirebaseKeys.teamName: teamName,
+        FirebaseKeys.teamImage: teamImage,
+        FirebaseKeys.description: description,
+        FirebaseKeys.createdBy: currentUserId,
+        FirebaseKeys.createdAt: DateTime.now().millisecondsSinceEpoch,
+      };
+
+      await teamRef.set(teamData);
+
+      // Add creator as admin member
+      await teamRef
+          .collection(FirebaseKeys.members)
+          .doc(currentUserId.toString())
+          .set({
+            FirebaseKeys.userId: currentUserId,
+            FirebaseKeys.userName: HiveUtils.getUserData()!.name,
+            FirebaseKeys.userImage: HiveUtils.getUserData()!.image,
+            FirebaseKeys.role: 'admin',
+            FirebaseKeys.joinedAt: DateTime.now().millisecondsSinceEpoch,
+            FirebaseKeys.isActive: true,
+            FirebaseKeys.hasLeft: false,
+          });
+
+      // Add other members
+      for (var memberId in memberIds) {
+        // TODO: Get user details for each member
+        await teamRef
+            .collection(FirebaseKeys.members)
+            .doc(memberId.toString())
+            .set({
+              FirebaseKeys.userId: memberId,
+              FirebaseKeys.userName: 'User $memberId', // TODO: Get actual name
+              FirebaseKeys.userImage: '', // TODO: Get actual image
+              FirebaseKeys.role: 'member',
+              FirebaseKeys.joinedAt: DateTime.now().millisecondsSinceEpoch,
+              FirebaseKeys.isActive: true,
+              FirebaseKeys.hasLeft: false,
+            });
+      }
+
+      // Add team to creator's teams list
+      await FirebaseFirestore.instance
+          .collection(FirebaseKeys.users)
+          .doc(currentUserId.toString())
+          .collection(FirebaseKeys.teams)
+          .doc(teamRef.id)
+          .set({
+            FirebaseKeys.teamId: int.parse(teamRef.id),
+            FirebaseKeys.teamName: teamName,
+            FirebaseKeys.teamImage: teamImage,
+            FirebaseKeys.joinedAt: DateTime.now().millisecondsSinceEpoch,
+            FirebaseKeys.isActive: true,
+            FirebaseKeys.hasLeft: false,
+          });
+
+      emit(GetMessages());
+    } catch (error) {
+      emit(ErrorState(error.toString()));
+    }
   }
 
   bool isInitial = true;
@@ -890,6 +1003,25 @@ class ChatCubit extends Cubit<ChatState> {
       chatExist = true;
     } catch (error) {
       rethrow;
+    }
+  }
+
+  Future<void> sendTeamTextMessage(MessageModel textMessage) async {
+    try {
+      final doc = FirebaseFirestore.instance
+          .collection(FirebaseKeys.teams)
+          .doc(teamId)
+          .collection(FirebaseKeys.chat)
+          .doc();
+      doc.set(textMessage.toJson(doc.id, false));
+      sendTeamNotification();
+      messages.insert(0, textMessage);
+      if (textMessage.type == MessageType.link.name) {
+        saveTeamLinks(textMessage);
+      }
+      emit(SendMessage());
+    } catch (error) {
+      emit(ErrorState(sl<ErrorModel>().getErrorMessage(error)));
     }
   }
 

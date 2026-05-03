@@ -6,12 +6,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:new_fly_easy_new/app/app_bloc/app_cubit.dart';
+import 'package:new_fly_easy_new/core/cache/cache_helper.dart';
+import 'package:new_fly_easy_new/core/hive/hive_utils.dart';
 import 'package:new_fly_easy_new/core/network/dio_helper.dart';
 import 'package:new_fly_easy_new/core/utils/app_extensions.dart';
 import 'package:new_fly_easy_new/core/utils/app_functions.dart';
 import 'package:new_fly_easy_new/core/utils/enums.dart';
 import 'package:new_fly_easy_new/core/widgets/dialog_progress_indicator.dart';
 import 'package:new_fly_easy_new/features/chat/bloc/chat_cubit.dart';
+
+import 'package:new_fly_easy_new/features/chat/models/chat_info_model.dart';
 import 'package:new_fly_easy_new/features/chat/models/chat_info/team_chat_info_model.dart';
 import 'package:new_fly_easy_new/features/chat/widgets/lower_section.dart';
 import 'package:new_fly_easy_new/features/chat/widgets/messages_list.dart';
@@ -19,11 +23,15 @@ import 'package:new_fly_easy_new/features/chat_media/bloc/team_chat_media_bloc/c
 import 'package:new_fly_easy_new/features/chat_media/bloc/user_chat_media_bloc/user_chat_media_cubit.dart';
 import 'package:new_fly_easy_new/features/chat_media/screens/team/chat_settings_screen.dart';
 import 'package:new_fly_easy_new/features/chat_media/screens/user/user_chat_settings_screen.dart';
+import 'package:new_fly_easy_new/features/home/bloc/home_cubit.dart';
+import 'package:new_fly_easy_new/features/teams/bloc/teams_cubit.dart' as teams;
 import 'package:iconly/iconly.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
+import 'package:zego_zim/zego_zim.dart';
 
 import '../../../core/utils/colors.dart';
+import '../bloc/chat_cubit.dart' as chat_state;
 import 'call_screen.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -41,6 +49,7 @@ class _ChatScreenState extends State<ChatScreen>
   ChatCubit get cubit => ChatCubit.get(context);
   final ScrollController _scrollController = ScrollController();
   bool _getMoreData = false;
+  bool _hasLeftChat = false; // Track if user has left chat (read-only state)
 
   @override
   void initState() {
@@ -48,6 +57,9 @@ class _ChatScreenState extends State<ChatScreen>
     // Clear previous messages before loading new chat
     cubit.clearMessages();
     cubit.isInitial = true;
+
+    // Check if user has left this chat (from persistent storage)
+    _checkLeaveStatusFromStorage();
 
     if (widget.chatInfo.isTeam) {
       cubit.teamId = widget.chatInfo.id.toString();
@@ -66,6 +78,65 @@ class _ChatScreenState extends State<ChatScreen>
     _scrollController.addListener(_scrollListener);
     getGetUsersInChat();
     super.initState();
+  }
+
+  // Check leave status from persistent storage
+  void _checkLeaveStatusFromStorage() {
+    final chatKey = widget.chatInfo.isTeam
+        ? 'left_team_${widget.chatInfo.id}'
+        : 'left_chat_${widget.chatInfo.id}';
+
+    final hasLeft = CacheHelper.getData(key: chatKey) ?? false;
+
+    if (mounted) {
+      setState(() {
+        _hasLeftChat = hasLeft;
+      });
+    }
+  }
+
+  // Save leave status to persistent storage
+  void _saveLeaveStatusToStorage(bool hasLeft) {
+    final chatKey = widget.chatInfo.isTeam
+        ? 'left_team_${widget.chatInfo.id}'
+        : 'left_chat_${widget.chatInfo.id}';
+
+    CacheHelper.putData(key: chatKey, value: hasLeft);
+  }
+
+  // Remove chat from user's personal list only
+  Future<void> _removeChatFromList() async {
+    try {
+      if (kDebugMode)
+        print('Removing chat from personal list: ${widget.chatInfo.id}');
+
+      // Store this chat in a "hidden chats" list so it doesn't appear in user's list
+      final hiddenKey = widget.chatInfo.isTeam
+          ? 'hidden_team_${widget.chatInfo.id}'
+          : 'hidden_chat_${widget.chatInfo.id}';
+
+      // Mark this chat as hidden for this user only
+      await CacheHelper.putData(key: hiddenKey, value: true);
+
+      if (mounted) {
+        // Clear leave status from storage since chat is being hidden
+        _saveLeaveStatusToStorage(false);
+
+        context.pop(); // Navigate back to chat list
+        AppFunctions.showToast(
+          message: 'Chat removed from your list successfully',
+          state: ToastStates.success,
+        );
+      }
+    } catch (error) {
+      if (kDebugMode) print('Error removing chat: $error');
+      if (mounted) {
+        AppFunctions.showToast(
+          message: 'Failed to remove chat: $error',
+          state: ToastStates.error,
+        );
+      }
+    }
   }
 
   late List<Map<String, dynamic>> userIdsList = [];
@@ -93,19 +164,118 @@ class _ChatScreenState extends State<ChatScreen>
     super.build(context);
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
-      child: BlocListener<ChatCubit, ChatState>(
+      child: BlocListener<ChatCubit, chat_state.ChatState>(
         listenWhen: (previous, current) =>
-            current is GetPositionLoad || current is GetPositionSuccess,
+            current is chat_state.GetPositionLoad ||
+            current is chat_state.GetPositionSuccess ||
+            current is chat_state.LeaveChatLoad ||
+            current is chat_state.LeaveChatSuccess,
         listener: _blocListener,
         child: Scaffold(
           backgroundColor: theme.cardColor,
           appBar: _appBar(),
           body: Column(
             children: [
+              // Show status message if user has left chat
+              if (_hasLeftChat)
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(16.w),
+                  margin: EdgeInsets.all(16.w),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.1),
+                    border: Border.all(color: Colors.orange),
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            color: Colors.orange,
+                            size: 24.sp,
+                          ),
+                          SizedBox(width: 12.w),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'You have left this chat',
+                                  style: TextStyle(
+                                    fontSize: 16.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.orange,
+                                  ),
+                                ),
+                                SizedBox(height: 4.h),
+                                Text(
+                                  'You can only read messages. To participate again, you need to rejoin this chat.',
+                                  style: TextStyle(
+                                    fontSize: 14.sp,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 12.h),
+                      // Remove from list button
+                      Container(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: _removeChatFromList,
+                          icon: Icon(Icons.delete_forever, size: 18.sp),
+                          label: Text('Remove from List'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.symmetric(vertical: 8.h),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.r),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               Expanded(
                 child: MessagesList(scrollController: _scrollController),
               ),
-              const LowerSection(),
+              // Disable input section if user has left chat
+              if (_hasLeftChat)
+                Container(
+                  padding: EdgeInsets.all(16.w),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withValues(alpha: 0.1),
+                    border: Border(
+                      top: BorderSide(
+                        color: Colors.grey.withValues(alpha: 0.3),
+                      ),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.block, color: Colors.grey, size: 20.sp),
+                      SizedBox(width: 8.w),
+                      Text(
+                        'You cannot send messages in this chat',
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          color: Colors.grey,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                const LowerSection(),
             ],
           ),
         ),
@@ -336,6 +506,149 @@ class _ChatScreenState extends State<ChatScreen>
         });
   }
 
+  void _showLeaveOptionsDialog() {
+    String selectedOption = 'leave_only'; // Local variable for dialog state
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Row(
+                children: [
+                  Icon(Icons.exit_to_app, color: Colors.red, size: 24),
+                  SizedBox(width: 10),
+                  Text('Leave Chat'),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Choose an option:',
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                  RadioListTile<String>(
+                    title: Text('Leave Chat Only'),
+                    subtitle: Text('Chat will remain for other members'),
+                    value: 'leave_only',
+                    groupValue: selectedOption,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedOption = value!;
+                      });
+                    },
+                  ),
+                  RadioListTile<String>(
+                    title: Text('Leave and Delete Chat'),
+                    subtitle: Text('Chat will be deleted only for you'),
+                    value: 'leave_and_delete',
+                    groupValue: selectedOption,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedOption = value!;
+                      });
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () => _executeLeaveAction(selectedOption),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: Text('Leave'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _executeLeaveAction(String selectedOption) async {
+    if (kDebugMode)
+      print('Executing leave action with option: $selectedOption');
+
+    Navigator.of(context).pop(); // Close dialog
+
+    try {
+      if (selectedOption == 'leave_and_delete') {
+        // Leave and delete - remove chat from list completely
+        if (kDebugMode)
+          print('Leaving and deleting chat: ${widget.chatInfo.id}');
+
+        if (widget.chatInfo.isTeam) {
+          // Delete team from teams list
+          final teamsCubit = context.read<teams.TeamsCubit>();
+          await teamsCubit.deleteTeam(widget.chatInfo.id);
+        } else {
+          // Delete user chat from chat list
+          final homeCubit = context.read<HomeCubit>();
+          await homeCubit.deleteChat(
+            widget.chatInfo.userChatId ?? widget.chatInfo.id,
+          );
+        }
+
+        if (mounted) {
+          context.pop(); // Navigate back to chat list
+          AppFunctions.showToast(
+            message: 'Chat deleted for you successfully',
+            state: ToastStates.success,
+          );
+        }
+      } else {
+        // Leave only - stay in chat but can't send messages
+        if (kDebugMode)
+          print('Leaving chat only (read-only): ${widget.chatInfo.id}');
+
+        if (widget.chatInfo.isTeam) {
+          await cubit.leaveTeamChat(widget.chatInfo.id);
+        } else {
+          await cubit.leaveUserChat(widget.chatInfo.id);
+        }
+
+        // Update UI to show read-only state
+        if (mounted) {
+          setState(() {
+            _hasLeftChat = true; // Set leave flag
+          });
+
+          // Save leave status to persistent storage
+          _saveLeaveStatusToStorage(true);
+
+          AppFunctions.showToast(
+            message: 'You have left this chat',
+            state: ToastStates.success,
+          );
+        }
+      }
+    } catch (error) {
+      if (kDebugMode) print('Error leaving chat: $error');
+      if (mounted) {
+        AppFunctions.showToast(
+          message: 'Failed to leave chat: $error',
+          state: ToastStates.error,
+        );
+      }
+    }
+  }
+
   Future<bool> _askStoragePermission() async {
     final DeviceInfoPlugin info =
         DeviceInfoPlugin(); // import 'package:device_info_plus/device_info_plus.dart';
@@ -365,15 +678,25 @@ class _ChatScreenState extends State<ChatScreen>
     return havePermission;
   }
 
-  void _blocListener(BuildContext context, ChatState state) {
-    if (state is GetPositionLoad) {
+  void _blocListener(BuildContext context, chat_state.ChatState state) {
+    if (state is chat_state.GetPositionLoad) {
       showDialog(
         context: context,
         builder: (context) => const DialogIndicator(),
       );
-    } else if (state is GetPositionSuccess) {
+    } else if (state is chat_state.GetPositionSuccess) {
       Navigator.of(context, rootNavigator: true).pop();
-    } else if (state is ErrorState) {
+    } else if (state is chat_state.LeaveChatLoad) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const DialogIndicator(),
+      );
+    } else if (state is chat_state.LeaveChatSuccess) {
+      Navigator.of(context, rootNavigator: true).pop();
+      // Navigation back is handled in _executeLeaveAction
+    } else if (state is chat_state.ErrorState) {
+      Navigator.of(context, rootNavigator: true).pop();
       AppFunctions.showToast(message: state.error, state: ToastStates.error);
     }
   }
@@ -462,6 +785,10 @@ class _ChatScreenState extends State<ChatScreen>
           }
         },
         icon: Icon(IconlyLight.video, size: 22.sp),
+      ),
+      IconButton(
+        onPressed: _showLeaveOptionsDialog,
+        icon: Icon(IconlyLight.logout, size: 22.sp),
       ),
       SizedBox(width: 5.w),
     ],

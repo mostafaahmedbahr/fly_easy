@@ -112,3 +112,7 @@ class GetPositionLoad extends ChatState {}
 class GetPositionSuccess extends ChatState {}
 
 class ShowLocationReasonMessage extends ChatState {}
+
+class LeaveChatLoad extends ChatState {}
+
+class LeaveChatSuccess extends ChatState {}
