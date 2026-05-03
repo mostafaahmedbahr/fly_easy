@@ -45,6 +45,10 @@ class _ChatScreenState extends State<ChatScreen>
   @override
   void initState() {
     cubit.soundPlayer = AudioPlayer();
+    // Clear previous messages before loading new chat
+    cubit.clearMessages();
+    cubit.isInitial = true;
+
     if (widget.chatInfo.isTeam) {
       cubit.teamId = widget.chatInfo.id.toString();
       cubit.getTeamMessages();

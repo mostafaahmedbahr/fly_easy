@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
- import 'package:contacts_service_plus/contacts_service_plus.dart';
+import 'package:contacts_service_plus/contacts_service_plus.dart';
 // import 'package:contacts_service/contacts_service.dart';
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
@@ -41,6 +41,16 @@ class ChatCubit extends Cubit<ChatState> {
   String? teamId;
   String? userId;
   final List<MessageModel> messages = [];
+
+  // Clear all messages when opening a new chat
+  void clearMessages() {
+    messages.clear();
+    if (chatStream != null) {
+      chatStream!.cancel();
+      chatStream = null;
+    }
+    isInitial = true;
+  }
 
   Future<void> sendTeamTextMessage(MessageModel textMessage) async {
     try {
@@ -82,28 +92,29 @@ class ChatCubit extends Cubit<ChatState> {
             .limit(10)
             .snapshots()
             .listen((event) {
-          for (var element in event.docChanges) {
-            switch (element.type) {
-              case DocumentChangeType.added:
-                if (isInitial) {
-                  messages.add(MessageModel.fromJson(element.doc.data()!));
-                } else {
-                  MessageModel message =
-                      MessageModel.fromJson(element.doc.data()!);
-                  if (message.senderId != HiveUtils.getUserData()!.id) {
-                    messages.insert(0, message);
-                    _makeSound();
-                  }
+              for (var element in event.docChanges) {
+                switch (element.type) {
+                  case DocumentChangeType.added:
+                    if (isInitial) {
+                      messages.add(MessageModel.fromJson(element.doc.data()!));
+                    } else {
+                      MessageModel message = MessageModel.fromJson(
+                        element.doc.data()!,
+                      );
+                      if (message.senderId != HiveUtils.getUserData()!.id) {
+                        messages.insert(0, message);
+                        _makeSound();
+                      }
+                    }
+                    break;
+                  default:
+                    // messages.insert(0, MessageModel.fromJson(element.doc.data()!));
+                    break;
                 }
-                break;
-              default:
-                // messages.insert(0, MessageModel.fromJson(element.doc.data()!));
-                break;
-            }
-          }
-          emit(GetMessages());
-          isInitial = false;
-        });
+              }
+              emit(GetMessages());
+              isInitial = false;
+            });
       } catch (error) {
         if (error is FirebaseException) {
           emit(GetMessagesError(error.code));
@@ -132,37 +143,44 @@ class ChatCubit extends Cubit<ChatState> {
             .limit(10)
             .snapshots()
             .listen((event) {
-          for (var element in event.docChanges) {
-            switch (element.type) {
-              case DocumentChangeType.added:
-                MessageModel message =
-                    MessageModel.fromJson(element.doc.data()!);
-                if (isInitial) {
-                  messages.add(message);
-                } else {
-                  if (message.senderId.toString() == userId) {
-                    messages.insert(0, message);
-                    _makeSound();
-                  }
+              for (var element in event.docChanges) {
+                switch (element.type) {
+                  case DocumentChangeType.added:
+                    MessageModel message = MessageModel.fromJson(
+                      element.doc.data()!,
+                    );
+                    if (isInitial) {
+                      messages.add(message);
+                    } else {
+                      if (message.senderId.toString() == userId) {
+                        messages.insert(0, message);
+                        _makeSound();
+                      }
+                    }
+                    if (message.senderId.toString() == userId &&
+                        !message.seen) {
+                      markAsSeen(message.messageId!);
+                    }
+                    break;
+                  case DocumentChangeType.modified:
+                    emit(
+                      UpdateMessageState(
+                        element.doc.data()![FirebaseKeys.virtualId],
+                      ),
+                    );
+                    messages
+                            .firstWhere(
+                              (message) => message.messageId == element.doc.id,
+                            )
+                            .seen =
+                        true;
+                  default:
+                    break;
                 }
-                if (message.senderId.toString() == userId && !message.seen) {
-                  markAsSeen(message.messageId!);
-                }
-                break;
-              case DocumentChangeType.modified:
-                emit(UpdateMessageState(
-                    element.doc.data()![FirebaseKeys.virtualId]));
-                messages
-                    .firstWhere(
-                        (message) => message.messageId == element.doc.id)
-                    .seen = true;
-              default:
-                break;
-            }
-          }
-          emit(GetMessages());
-          isInitial = false;
-        });
+              }
+              emit(GetMessages());
+              isInitial = false;
+            });
       } catch (error) {
         if (error is FirebaseException) {
           emit(GetMessagesError(error.code));
@@ -285,12 +303,12 @@ class ChatCubit extends Cubit<ChatState> {
 
   Future<void> pickImageFromCamera() async {
     try {
-      var file = await picker.pickImage(
-        source: ImageSource.camera,
-      );
+      var file = await picker.pickImage(source: ImageSource.camera);
       if (file != null) {
-        ChatImageModel imageModel =
-            ChatImageModel(file: File(file.path), virtualId: sl<Uuid>().v1());
+        ChatImageModel imageModel = ChatImageModel(
+          file: File(file.path),
+          virtualId: sl<Uuid>().v1(),
+        );
         MessageModel message = MessageModel(
           virtualId: sl<Uuid>().v1(),
           type: MessageType.image.name,
@@ -311,20 +329,24 @@ class ChatCubit extends Cubit<ChatState> {
       List<XFile> pickedImages = await picker.pickMultiImage(imageQuality: 50);
       for (var element in pickedImages) {
         images.add(File(element.path));
-        imagesModel.add(ChatImageModel(
+        imagesModel.add(
+          ChatImageModel(
             file: File(element.path),
             virtualId: sl<Uuid>().v1(),
-            name: element.name));
+            name: element.name,
+          ),
+        );
       }
       if (images.isNotEmpty) {
         MessageModel message = MessageModel(
-            virtualId: sl<Uuid>().v1(),
-            type: MessageType.image.name,
-            dateTime: Timestamp.now(),
-            senderId: HiveUtils.getUserData()!.id,
-            senderImage: HiveUtils.getUserData()!.image,
-            senderName: HiveUtils.getUserData()!.name,
-            images: imagesModel);
+          virtualId: sl<Uuid>().v1(),
+          type: MessageType.image.name,
+          dateTime: Timestamp.now(),
+          senderId: HiveUtils.getUserData()!.id,
+          senderImage: HiveUtils.getUserData()!.image,
+          senderName: HiveUtils.getUserData()!.name,
+          images: imagesModel,
+        );
         messages.insert(0, message);
         emit(PickImages());
         await uploadImages(message);
@@ -337,17 +359,20 @@ class ChatCubit extends Cubit<ChatState> {
   Future<void> uploadImages(MessageModel message) async {
     try {
       for (var image in message.images!) {
-        final ref = FirebaseStorage.instance
-            .ref()
-            .child('images/${Uri.file(image.file!.path).pathSegments.last}/');
+        final ref = FirebaseStorage.instance.ref().child(
+          'images/${Uri.file(image.file!.path).pathSegments.last}/',
+        );
         final task = await ref.putFile(image.file!);
         await task.ref.getDownloadURL().then((value) {
           image.imageUrl = value;
           messages
-              .firstWhere((element) => element.virtualId == message.virtualId)
-              .images!
-              .firstWhere((element) => element.virtualId == image.virtualId)
-              .imageUrl = value;
+                  .firstWhere(
+                    (element) => element.virtualId == message.virtualId,
+                  )
+                  .images!
+                  .firstWhere((element) => element.virtualId == image.virtualId)
+                  .imageUrl =
+              value;
           emit(UploadImageSuccess(image.virtualId!));
         });
       }
@@ -380,8 +405,11 @@ class ChatCubit extends Cubit<ChatState> {
 
   void downloadImages(List<ChatImageModel> images) {
     for (var image in images) {
-      sl<DownloadManager>()
-          .downloadImage(image.imageUrl!, image.name??image.virtualId!, image.virtualId!);
+      sl<DownloadManager>().downloadImage(
+        image.imageUrl!,
+        image.name ?? image.virtualId!,
+        image.virtualId!,
+      );
     }
   }
 
@@ -391,19 +419,24 @@ class ChatCubit extends Cubit<ChatState> {
     VideoModel videoModel;
     try {
       XFile? pickedVideo = await picker.pickVideo(
-          maxDuration: const Duration(minutes: 2), source: ImageSource.gallery);
+        maxDuration: const Duration(minutes: 2),
+        source: ImageSource.gallery,
+      );
       if (pickedVideo != null) {
         video = File(pickedVideo.path);
-        videoModel =
-            VideoModel(videoFile: video, videoVirtualId: sl<Uuid>().v1());
+        videoModel = VideoModel(
+          videoFile: video,
+          videoVirtualId: sl<Uuid>().v1(),
+        );
         MessageModel message = MessageModel(
-            virtualId: sl<Uuid>().v1(),
-            type: MessageType.video.name,
-            dateTime: Timestamp.now(),
-            senderId: HiveUtils.getUserData()!.id,
-            senderImage: HiveUtils.getUserData()!.image,
-            senderName: HiveUtils.getUserData()!.name,
-            video: videoModel);
+          virtualId: sl<Uuid>().v1(),
+          type: MessageType.video.name,
+          dateTime: Timestamp.now(),
+          senderId: HiveUtils.getUserData()!.id,
+          senderImage: HiveUtils.getUserData()!.image,
+          senderName: HiveUtils.getUserData()!.name,
+          video: videoModel,
+        );
         messages.insert(0, message);
         emit(PickVideo());
         await uploadVideo(message);
@@ -416,14 +449,16 @@ class ChatCubit extends Cubit<ChatState> {
   Future<void> uploadVideo(MessageModel message) async {
     try {
       final ref = FirebaseStorage.instance.ref().child(
-          'videos/${Uri.file(message.video!.videoFile!.path).pathSegments.last}');
+        'videos/${Uri.file(message.video!.videoFile!.path).pathSegments.last}',
+      );
       final task = await ref.putFile(message.video!.videoFile!);
       await task.ref.getDownloadURL().then((value) {
         message.video!.videoUrl = value;
         messages
-            .firstWhere((element) => element.virtualId == message.virtualId)
-            .video!
-            .videoUrl = value;
+                .firstWhere((element) => element.virtualId == message.virtualId)
+                .video!
+                .videoUrl =
+            value;
         emit(UploadVideoSuccess(message.video!.videoVirtualId!));
       });
       if (teamId != null) {
@@ -453,9 +488,10 @@ class ChatCubit extends Cubit<ChatState> {
         final newFile = File(pickedFile.path!);
 
         /// add this file to my download directory //////
-        String localPath=await downloadManager.localPath;
+        String localPath = await downloadManager.localPath;
         final File localFile = File(
-            '$localPath/${getFileName(id: fileId, fileName: pickedFile.name)}');
+          '$localPath/${getFileName(id: fileId, fileName: pickedFile.name)}',
+        );
 
         /// this is the download path
         await newFile.copy(localFile.path);
@@ -464,22 +500,25 @@ class ChatCubit extends Cubit<ChatState> {
         /// ///////////////////////////////////////////
 
         files.add(newFile);
-        filesModel.add(ChatFileModel(
-          file: File(pickedFile.path!),
-          virtualId: fileId,
-          fileName: pickedFile.name,
-          fileSize: pickedFile.size,
-          fileExtension: pickedFile.extension,
-        ));
+        filesModel.add(
+          ChatFileModel(
+            file: File(pickedFile.path!),
+            virtualId: fileId,
+            fileName: pickedFile.name,
+            fileSize: pickedFile.size,
+            fileExtension: pickedFile.extension,
+          ),
+        );
       }
       MessageModel message = MessageModel(
-          virtualId: sl<Uuid>().v1(),
-          type: MessageType.file.name,
-          dateTime: Timestamp.now(),
-          senderId: HiveUtils.getUserData()!.id,
-          senderImage: HiveUtils.getUserData()!.image,
-          senderName: HiveUtils.getUserData()!.name,
-          files: filesModel);
+        virtualId: sl<Uuid>().v1(),
+        type: MessageType.file.name,
+        dateTime: Timestamp.now(),
+        senderId: HiveUtils.getUserData()!.id,
+        senderImage: HiveUtils.getUserData()!.image,
+        senderName: HiveUtils.getUserData()!.name,
+        files: filesModel,
+      );
       messages.insert(0, message);
       emit(PickFileSuccess());
       await uploadFiles(message);
@@ -489,17 +528,20 @@ class ChatCubit extends Cubit<ChatState> {
   Future<void> uploadFiles(MessageModel message) async {
     try {
       for (var file in message.files!) {
-        final ref = FirebaseStorage.instance
-            .ref()
-            .child('files/${Uri.file(file.file!.path).pathSegments.last}');
+        final ref = FirebaseStorage.instance.ref().child(
+          'files/${Uri.file(file.file!.path).pathSegments.last}',
+        );
         final task = await ref.putFile(file.file!);
         await task.ref.getDownloadURL().then((value) {
           file.fileUrl = value;
           messages
-              .firstWhere((element) => element.virtualId == message.virtualId)
-              .files!
-              .firstWhere((element) => element.virtualId == file.virtualId)
-              .fileUrl = value;
+                  .firstWhere(
+                    (element) => element.virtualId == message.virtualId,
+                  )
+                  .files!
+                  .firstWhere((element) => element.virtualId == file.virtualId)
+                  .fileUrl =
+              value;
           emit(UploadFileSuccess(file.virtualId!));
         });
       }
@@ -517,20 +559,24 @@ class ChatCubit extends Cubit<ChatState> {
 
   DownloadManager downloadManager = sl<DownloadManager>();
 
-  Future<void> openChatFile(
-      {required String fileName,
-      required String fileId,
-      required String fileUrl}) async {
+  Future<void> openChatFile({
+    required String fileName,
+    required String fileId,
+    required String fileUrl,
+  }) async {
     try {
       // Check if file exists locally
-      File? localFile = await downloadManager
-          .getFileLocally(getFileName(id: fileId, fileName: fileName));
+      File? localFile = await downloadManager.getFileLocally(
+        getFileName(id: fileId, fileName: fileName),
+      );
       if (localFile != null) {
         OpenFile.open(localFile.path);
       } else {
         emit(DownloadFileLoad(fileId));
         final file = await downloadManager.downloadFile(
-            fileUrl, getFileName(id: fileId, fileName: fileName));
+          fileUrl,
+          getFileName(id: fileId, fileName: fileName),
+        );
         emit(DownloadFileSuccess(fileId));
         OpenFile.open(file.path);
       }
@@ -566,57 +612,31 @@ class ChatCubit extends Cubit<ChatState> {
     double size = 30;
     switch (extension) {
       case 'pdf':
-        return Icon(
-          Icons.picture_as_pdf,
-          color: color,
-          size: size,
-        );
+        return Icon(Icons.picture_as_pdf, color: color, size: size);
       case 'doc':
       case 'docx':
-        return Icon(
-          Icons.description,
-          color: color,
-          size: size,
-        );
+        return Icon(Icons.description, color: color, size: size);
       case 'xls':
       case 'xlsx':
-        return Icon(
-          Icons.table_chart,
-          color: color,
-          size: size,
-        );
+        return Icon(Icons.table_chart, color: color, size: size);
       case 'jpg':
       case 'png':
       case 'jpeg':
-        return Icon(
-          Icons.image,
-          color: color,
-          size: size,
-        );
+        return Icon(Icons.image, color: color, size: size);
       case 'mp4':
       case 'avi':
-        return Icon(
-          Icons.movie,
-          color: color,
-          size: size,
-        );
+        return Icon(Icons.movie, color: color, size: size);
       case 'mp3':
       case 'wav':
-        return Icon(
-          Icons.music_note,
-          color: color,
-        );
+        return Icon(Icons.music_note, color: color);
       default:
-        return Icon(
-          Icons.insert_drive_file,
-          color: color,
-        );
+        return Icon(Icons.insert_drive_file, color: color);
     }
   }
 
   /// //////////////// Record /////////////////////////////////////
   Future<String> getRecordsFilePath(String recordId) async {
-    String localPath=await downloadManager.localPath;
+    String localPath = await downloadManager.localPath;
     String sdPath = "$localPath/records";
     var newDirectory = Directory(sdPath);
     if (!newDirectory.existsSync()) {
@@ -627,8 +647,10 @@ class ChatCubit extends Cubit<ChatState> {
 
   Future<void> saveAudioFile(String path, String recordId) async {
     final audioFile = File(path);
-    final recordModel =
-        ChatRecordModel(virtualId: recordId, recordFile: audioFile);
+    final recordModel = ChatRecordModel(
+      virtualId: recordId,
+      recordFile: audioFile,
+    );
     MessageModel message = MessageModel(
       virtualId: sl<Uuid>().v1(),
       type: MessageType.voice.name,
@@ -646,14 +668,16 @@ class ChatCubit extends Cubit<ChatState> {
   Future<void> uploadRecord(MessageModel message) async {
     try {
       final ref = FirebaseStorage.instance.ref().child(
-          'records/${Uri.file(message.record!.recordFile!.path).pathSegments.last}');
+        'records/${Uri.file(message.record!.recordFile!.path).pathSegments.last}',
+      );
       final task = await ref.putFile(message.record!.recordFile!);
       await task.ref.getDownloadURL().then((value) async {
         message.record!.recordUrl = value;
         messages
-            .firstWhere((element) => element.virtualId == message.virtualId)
-            .record!
-            .recordUrl = value;
+                .firstWhere((element) => element.virtualId == message.virtualId)
+                .record!
+                .recordUrl =
+            value;
         final path = await getRecordsFilePath(message.record!.virtualId!);
         emit(UploadRecordSuccess(message.record!.virtualId!, path));
       });
@@ -671,12 +695,16 @@ class ChatCubit extends Cubit<ChatState> {
     return File(recordPath).existsSync();
   }
 
-  Future<void> downloadRecordFile(
-      {required String recordId, required String recordUrl}) async {
+  Future<void> downloadRecordFile({
+    required String recordId,
+    required String recordUrl,
+  }) async {
     try {
       emit(DownloadRecordLoad(recordId));
       await downloadManager.downloadFile(
-          recordUrl, 'records/${recordId}_record.m4a');
+        recordUrl,
+        'records/${recordId}_record.m4a',
+      );
       final path = await getRecordsFilePath(recordId);
       emit(DownloadRecordSuccess(recordId, path));
     } catch (error) {
@@ -694,11 +722,14 @@ class ChatCubit extends Cubit<ChatState> {
     try {
       List<ContactModel> contacts = [];
       for (var contact in selectedContacts) {
-        contacts.add(ContactModel(
+        contacts.add(
+          ContactModel(
             name: contact.displayName ?? '',
             phone: contact.phones == null || contact.phones!.isEmpty
                 ? ''
-                : contact.phones![0].value!));
+                : contact.phones![0].value!,
+          ),
+        );
       }
       if (contacts.isNotEmpty) {
         sendSelectedContacts(contacts);
@@ -711,13 +742,14 @@ class ChatCubit extends Cubit<ChatState> {
   Future<void> sendSelectedContacts(List<ContactModel> contacts) async {
     for (var contact in contacts) {
       final message = MessageModel(
-          virtualId: sl<Uuid>().v1(),
-          senderId: HiveUtils.getUserData()!.id,
-          senderName: HiveUtils.getUserData()!.name,
-          senderImage: HiveUtils.getUserData()!.image,
-          contact: contact,
-          type: MessageType.contact.name,
-          dateTime: Timestamp.now());
+        virtualId: sl<Uuid>().v1(),
+        senderId: HiveUtils.getUserData()!.id,
+        senderName: HiveUtils.getUserData()!.name,
+        senderImage: HiveUtils.getUserData()!.image,
+        contact: contact,
+        type: MessageType.contact.name,
+        dateTime: Timestamp.now(),
+      );
       if (teamId != null) {
         await sendTeamTextMessage(message);
       } else {
@@ -770,7 +802,8 @@ class ChatCubit extends Cubit<ChatState> {
   Future<Position> _determinePosition() async {
     emit(GetPositionLoad());
     Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
+      desiredAccuracy: LocationAccuracy.high,
+    );
     emit(GetPositionSuccess());
     return position;
   }
@@ -781,14 +814,15 @@ class ChatCubit extends Cubit<ChatState> {
       final Position? location = await _accessLocation();
       if (location != null) {
         final message = MessageModel(
-            virtualId: messageId,
-            senderId: HiveUtils.getUserData()!.id,
-            senderName: HiveUtils.getUserData()!.name,
-            senderImage: HiveUtils.getUserData()!.image,
-            text:
-                'https://www.google.com/maps/search/?api=1&query=${location.latitude},${location.longitude}',
-            type: MessageType.location.name,
-            dateTime: Timestamp.now());
+          virtualId: messageId,
+          senderId: HiveUtils.getUserData()!.id,
+          senderName: HiveUtils.getUserData()!.name,
+          senderImage: HiveUtils.getUserData()!.image,
+          text:
+              'https://www.google.com/maps/search/?api=1&query=${location.latitude},${location.longitude}',
+          type: MessageType.location.name,
+          dateTime: Timestamp.now(),
+        );
         if (teamId != null) {
           await sendTeamTextMessage(message);
         } else {
@@ -850,8 +884,9 @@ class ChatCubit extends Cubit<ChatState> {
   Future<void> createUsersChats(List<String> membersId) async {
     try {
       await DioHelper.postData(
-          path: EndPoints.forwardMessage,
-          data: FormData.fromMap({'who_receive_message[]': membersId}));
+        path: EndPoints.forwardMessage,
+        data: FormData.fromMap({'who_receive_message[]': membersId}),
+      );
       chatExist = true;
     } catch (error) {
       rethrow;
@@ -993,11 +1028,12 @@ class ChatCubit extends Cubit<ChatState> {
   Future<void> sendUserNotification() async {
     try {
       await DioHelper.postData(
-          path: EndPoints.sendUserNotification,
-          data: FormData.fromMap({
-            'from': HiveUtils.getUserData()!.id,
-            'user_ids[]': [userId]
-          }));
+        path: EndPoints.sendUserNotification,
+        data: FormData.fromMap({
+          'from': HiveUtils.getUserData()!.id,
+          'user_ids[]': [userId],
+        }),
+      );
     } catch (error) {
       rethrow;
     }
@@ -1006,8 +1042,9 @@ class ChatCubit extends Cubit<ChatState> {
   Future<void> sendTeamNotification() async {
     try {
       DioHelper.postData(
-          path: '${EndPoints.sendTeamNotification}/$teamId',
-          data: FormData.fromMap({'from': HiveUtils.getUserData()!.id}));
+        path: '${EndPoints.sendTeamNotification}/$teamId',
+        data: FormData.fromMap({'from': HiveUtils.getUserData()!.id}),
+      );
     } catch (error) {
       rethrow;
     }
