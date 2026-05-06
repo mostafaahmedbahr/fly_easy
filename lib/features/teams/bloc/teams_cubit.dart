@@ -49,7 +49,7 @@ class TeamsCubit extends Cubit<TeamsState> {
           response.data['data'].forEach((team) {
             final teamModel = TeamModel.fromJson(team);
 
-            // Check if this team is deleted from local cache
+            // Check if this team is deleted from local cache (user's list only)
             final deleteKey = 'deleted_team_${teamModel.id}';
             final isDeleted = CacheHelper.getData(key: deleteKey) ?? false;
 
@@ -90,11 +90,11 @@ class TeamsCubit extends Cubit<TeamsState> {
           response.data['data'].forEach((team) {
             final teamModel = TeamModel.fromJson(team);
 
-            // Check if this team is deleted from local cache
+            // Check if this team is deleted from local cache (user's list only)
             final deleteKey = 'deleted_team_${teamModel.id}';
             final isDeleted = CacheHelper.getData(key: deleteKey) ?? false;
 
-            // Only add non-deleted teams to list
+            // Only add non-deleted teams to the list
             if (!isDeleted) {
               list.add(teamModel);
             }
@@ -154,18 +154,11 @@ class TeamsCubit extends Cubit<TeamsState> {
   Future<void> deleteTeam(int teamId) async {
     emit(DeleteTeamLoad());
     try {
-      final response = await DioHelper.deleteData(
-        path: '${EndPoints.deleteChannel}/$teamId',
-      );
-      if (response.statusCode == 200) {
-        // Save deletion status to local cache
-        final deleteKey = 'deleted_team_$teamId';
-        await CacheHelper.putData(key: deleteKey, value: true);
+      // Save deletion status to local cache only (not delete from server)
+      final deleteKey = 'deleted_team_$teamId';
+      await CacheHelper.putData(key: deleteKey, value: true);
 
-        UserModel updatedUserCharge = UserModel.fromJson(response.data['data']);
-        await HiveUtils.setUserData(updatedUserCharge);
-        emit(DeleteTeamSuccess(teamId));
-      }
+      emit(DeleteTeamSuccess(teamId));
     } catch (error) {
       emit(DeleteChannelError(sl<ErrorModel>().getErrorMessage(error)));
     }

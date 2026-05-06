@@ -44,44 +44,58 @@ class _ArchivedTeamsViewState extends State<ArchivedTeamsView>
     return RefreshIndicator(
       onRefresh: () async => cubit.archivedTeamsPagingController.refresh(),
       color: Theme.of(context).indicatorColor,
-      child: BlocBuilder<TeamsCubit, TeamsState>(
-        buildWhen: (previous, current) => current is DeleteArchiveSuccess,
-        builder: (context, state) => PagedListView.separated(
-          padding: EdgeInsets.only(left: 15.w, right: 15.w, bottom: 30.h, top: 15.h),
-          separatorBuilder: (context, index) => SizedBox(
-            height: 15.h,
-          ),
-          pagingController: cubit.archivedTeamsPagingController,
-          builderDelegate: PagedChildBuilderDelegate<TeamModel>(
-              itemBuilder: (context, item, index) => item.type == UserType.admin.name
+      child: BlocListener<TeamsCubit, TeamsState>(
+        listener: (context, state) {
+          if (state is DeleteTeamSuccess) {
+            // Refresh all lists automatically when team is deleted
+            cubit.archivedTeamsPagingController.refresh();
+            cubit.adminTeamsPagingController.refresh();
+            cubit.joinedTeamsPagingController.refresh();
+          } else if (state is DeleteArchiveSuccess) {
+            cubit.archivedTeamsPagingController.refresh();
+          }
+        },
+        child: BlocBuilder<TeamsCubit, TeamsState>(
+          buildWhen: (previous, current) => current is DeleteArchiveSuccess,
+          builder: (context, state) => PagedListView.separated(
+            padding: EdgeInsets.only(
+              left: 15.w,
+              right: 15.w,
+              bottom: 30.h,
+              top: 15.h,
+            ),
+            separatorBuilder: (context, index) => SizedBox(height: 15.h),
+            pagingController: cubit.archivedTeamsPagingController,
+            builderDelegate: PagedChildBuilderDelegate<TeamModel>(
+              itemBuilder: (context, item, index) =>
+                  item.type == UserType.admin.name
                   ? Slidable(
                       key: ObjectKey(item),
                       startActionPane: ActionPane(
-                          motion: const BehindMotion(),
-                          extentRatio: .25,
-                          children: [
-                            SlidableAction(
-                              borderRadius:
-                                  const BorderRadius.all(Radius.circular(10)),
-                              backgroundColor: Colors.red,
-                              autoClose: true,
-                              onPressed: (context) {
-                                AppFunctions.showAdaptiveDialog(
-                                  context,
-                                  title:
-                                      LocaleKeys.do_you_want_delete_team.tr(),
-                                  actionName: LocaleKeys.delete.tr(),
-                                  onPress: () {
-                                    cubit.deleteArchiveChannel(item.id);
-                                  },
-                                );
-                              },
-                              icon: AppIcons.delete,
+                        motion: const BehindMotion(),
+                        extentRatio: .25,
+                        children: [
+                          SlidableAction(
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(10),
                             ),
-                            SizedBox(
-                              width: 5.w,
-                            )
-                          ]),
+                            backgroundColor: Colors.red,
+                            autoClose: true,
+                            onPressed: (context) {
+                              AppFunctions.showAdaptiveDialog(
+                                context,
+                                title: LocaleKeys.do_you_want_delete_team.tr(),
+                                actionName: LocaleKeys.delete.tr(),
+                                onPress: () {
+                                  cubit.deleteArchiveChannel(item.id);
+                                },
+                              );
+                            },
+                            icon: AppIcons.delete,
+                          ),
+                          SizedBox(width: 5.w),
+                        ],
+                      ),
                       child: TeamItem(
                         team: item,
                         isAdmin: false,
@@ -94,17 +108,19 @@ class _ArchivedTeamsViewState extends State<ArchivedTeamsView>
                       isAdmin: false,
                       isArchive: true,
                     ),
-              firstPageProgressIndicatorBuilder: (_) => const Center(
-                    child: MyProgress(),
-                  ),
+              firstPageProgressIndicatorBuilder: (_) =>
+                  const Center(child: MyProgress()),
               firstPageErrorIndicatorBuilder: (context) => TeamsErrorView(
-                  message: cubit.archivedTeamsPagingController.error),
+                message: cubit.archivedTeamsPagingController.error,
+              ),
               noItemsFoundIndicatorBuilder: (context) => const Center(
-                    child: EmptyWidget(text: '', image: AppImages.emptyTeams),
-                    // EmptyWidget(text: 'You have not any notifications'),
-                  ),
+                child: EmptyWidget(text: '', image: AppImages.emptyTeams),
+                // EmptyWidget(text: 'You have not any notifications'),
+              ),
               newPageProgressIndicatorBuilder: (_) =>
-                  const Center(child: MyProgress())),
+                  const Center(child: MyProgress()),
+            ),
+          ),
         ),
       ),
     );

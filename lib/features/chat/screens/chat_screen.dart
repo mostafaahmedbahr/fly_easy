@@ -134,6 +134,10 @@ class _ChatScreenState extends State<ChatScreen>
           message: 'Chat removed from your list successfully',
           state: ToastStates.success,
         );
+        // Also refresh all lists directly
+        context.read<teams.TeamsCubit>().adminTeamsPagingController.refresh();
+        context.read<teams.TeamsCubit>().joinedTeamsPagingController.refresh();
+        context.read<teams.TeamsCubit>().archivedTeamsPagingController.refresh();
       }
     } catch (error) {
       if (kDebugMode) print('Error removing chat: $error');

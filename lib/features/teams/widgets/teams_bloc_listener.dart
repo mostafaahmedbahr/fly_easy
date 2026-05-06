@@ -16,13 +16,14 @@ class TeamsBlocListener extends StatelessWidget {
       listener: (context, state) {
         if (state is ErrorState) {
           AppFunctions.showToast(
-              message: state.error, state: ToastStates.error);
+            message: state.error,
+            state: ToastStates.error,
+          );
         } else if (state is DeleteTeamSuccess) {
-          context
-              .read<TeamsCubit>()
-              .adminTeamsPagingController
-              .itemList!
-              .removeWhere((element) => element.id == state.channelId);
+          // Refresh all team lists to make deleted team disappear instantly
+          context.read<TeamsCubit>().adminTeamsPagingController.refresh();
+          context.read<TeamsCubit>().joinedTeamsPagingController.refresh();
+          context.read<TeamsCubit>().archivedTeamsPagingController.refresh();
           Navigator.of(context, rootNavigator: true).pop();
         } else if (state is DeleteCommunitySuccess) {
           context
@@ -60,14 +61,16 @@ class TeamsBlocListener extends StatelessWidget {
           context.read<TeamsCubit>().archivedTeamsPagingController.refresh();
           Navigator.of(context, rootNavigator: true).pop();
           AppFunctions.showToast(
-              message: LocaleKeys.the_team_added_to_archive.tr(),
-              state: ToastStates.success);
+            message: LocaleKeys.the_team_added_to_archive.tr(),
+            state: ToastStates.success,
+          );
         } else if (state is DuplicateChannelSuccess) {
           context.read<TeamsCubit>().adminTeamsPagingController.refresh();
           Navigator.of(context, rootNavigator: true).pop();
           AppFunctions.showToast(
-              message: LocaleKeys.the_team_duplicated_success.tr(),
-              state: ToastStates.success);
+            message: LocaleKeys.the_team_duplicated_success.tr(),
+            state: ToastStates.success,
+          );
         } else if (state is DeleteTeamLoad ||
             state is AddToArchiveLoad ||
             state is DuplicateChannelLoad ||

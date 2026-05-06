@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dio/dio.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:new_fly_easy_new/core/cache/cache_helper.dart';
 import 'package:new_fly_easy_new/core/hive/hive_utils.dart';
@@ -65,7 +65,7 @@ class HomeCubit extends Cubit<HomeState> {
           response.data['data'].forEach((chat) {
             final chatModel = UserChatModel.fromJson(chat);
 
-            // Check if this chat is deleted from local cache
+            // Check if this chat is deleted from local cache (user's list only)
             final deleteKey = 'deleted_chat_${chatModel.id}';
             final isDeleted = CacheHelper.getData(key: deleteKey) ?? false;
 
@@ -96,16 +96,11 @@ class HomeCubit extends Cubit<HomeState> {
   Future<void> deleteChat(int chatId) async {
     emit(DeleteChatLoad());
     try {
-      final response = await DioHelper.postData(
-        path: '${EndPoints.deleteRecentChat}/$chatId',
-      );
-      if (response.statusCode == 200) {
-        // Save deletion status to local cache
-        final deleteKey = 'deleted_chat_$chatId';
-        await CacheHelper.putData(key: deleteKey, value: true);
+      // Save deletion status to local cache only (not delete from server)
+      final deleteKey = 'deleted_chat_$chatId';
+      await CacheHelper.putData(key: deleteKey, value: true);
 
-        emit(DeleteChatSuccess(chatId));
-      }
+      emit(DeleteChatSuccess(chatId));
     } catch (error) {
       emit(DeleteChatError(sl<ErrorModel>().getErrorMessage(error)));
     }

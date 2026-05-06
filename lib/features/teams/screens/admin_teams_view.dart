@@ -132,7 +132,7 @@ class _AdminTeamsViewState extends State<AdminTeamsView>
                           actionName: LocaleKeys.delete.tr(),
                           onPress: () async {
                             await cubit.deleteTeam(item.id);
-                            // Also refresh all lists directly
+                            // Direct refresh for immediate update
                             cubit.adminTeamsPagingController.refresh();
                             cubit.joinedTeamsPagingController.refresh();
                             cubit.archivedTeamsPagingController.refresh();
