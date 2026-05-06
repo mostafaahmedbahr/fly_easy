@@ -4,6 +4,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:new_fly_easy_new/core/cache/cache_helper.dart';
 import 'package:new_fly_easy_new/core/hive/hive_utils.dart';
 import 'package:new_fly_easy_new/core/injection/di_container.dart';
 import 'package:new_fly_easy_new/core/network/connection.dart';
@@ -62,7 +63,16 @@ class HomeCubit extends Cubit<HomeState> {
         if (response.statusCode == 200) {
           List<UserChatModel> list = [];
           response.data['data'].forEach((chat) {
-            list.add(UserChatModel.fromJson(chat));
+            final chatModel = UserChatModel.fromJson(chat);
+
+            // Check if this chat is deleted from local cache
+            final deleteKey = 'deleted_chat_${chatModel.id}';
+            final isDeleted = CacheHelper.getData(key: deleteKey) ?? false;
+
+            // Only add non-deleted chats to the list
+            if (!isDeleted) {
+              list.add(chatModel);
+            }
           });
           final isLastPage = response.data['data'].length < _pageSize;
           if (isLastPage) {
@@ -90,6 +100,10 @@ class HomeCubit extends Cubit<HomeState> {
         path: '${EndPoints.deleteRecentChat}/$chatId',
       );
       if (response.statusCode == 200) {
+        // Save deletion status to local cache
+        final deleteKey = 'deleted_chat_$chatId';
+        await CacheHelper.putData(key: deleteKey, value: true);
+
         emit(DeleteChatSuccess(chatId));
       }
     } catch (error) {

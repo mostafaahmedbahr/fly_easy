@@ -14,7 +14,6 @@ import 'package:new_fly_easy_new/core/utils/app_functions.dart';
 import 'package:new_fly_easy_new/core/utils/enums.dart';
 import 'package:new_fly_easy_new/core/widgets/dialog_progress_indicator.dart';
 import 'package:new_fly_easy_new/features/chat/bloc/chat_cubit.dart';
-
 import 'package:new_fly_easy_new/features/chat/models/chat_info_model.dart';
 import 'package:new_fly_easy_new/features/chat/models/chat_info/team_chat_info_model.dart';
 import 'package:new_fly_easy_new/features/chat/widgets/lower_section.dart';
@@ -50,6 +49,7 @@ class _ChatScreenState extends State<ChatScreen>
   final ScrollController _scrollController = ScrollController();
   bool _getMoreData = false;
   bool _hasLeftChat = false; // Track if user has left chat (read-only state)
+  bool _isDeletedFromList = false; // Track if user removed chat from list
 
   @override
   void initState() {
@@ -82,26 +82,41 @@ class _ChatScreenState extends State<ChatScreen>
 
   // Check leave status from persistent storage
   void _checkLeaveStatusFromStorage() {
-    final chatKey = widget.chatInfo.isTeam
+    final leaveKey = widget.chatInfo.isTeam
         ? 'left_team_${widget.chatInfo.id}'
         : 'left_chat_${widget.chatInfo.id}';
 
-    final hasLeft = CacheHelper.getData(key: chatKey) ?? false;
+    final deleteKey = widget.chatInfo.isTeam
+        ? 'deleted_team_${widget.chatInfo.id}'
+        : 'deleted_chat_${widget.chatInfo.id}';
+
+    final hasLeft = CacheHelper.getData(key: leaveKey) ?? false;
+    final isDeleted = CacheHelper.getData(key: deleteKey) ?? false;
 
     if (mounted) {
       setState(() {
         _hasLeftChat = hasLeft;
+        _isDeletedFromList = isDeleted;
       });
     }
   }
 
   // Save leave status to persistent storage
   void _saveLeaveStatusToStorage(bool hasLeft) {
-    final chatKey = widget.chatInfo.isTeam
+    final leaveKey = widget.chatInfo.isTeam
         ? 'left_team_${widget.chatInfo.id}'
         : 'left_chat_${widget.chatInfo.id}';
 
-    CacheHelper.putData(key: chatKey, value: hasLeft);
+    CacheHelper.putData(key: leaveKey, value: hasLeft);
+  }
+
+  // Save delete status to persistent storage
+  void _saveDeleteStatusToStorage(bool isDeleted) {
+    final deleteKey = widget.chatInfo.isTeam
+        ? 'deleted_team_${widget.chatInfo.id}'
+        : 'deleted_chat_${widget.chatInfo.id}';
+
+    CacheHelper.putData(key: deleteKey, value: isDeleted);
   }
 
   // Remove chat from user's personal list only
@@ -110,18 +125,10 @@ class _ChatScreenState extends State<ChatScreen>
       if (kDebugMode)
         print('Removing chat from personal list: ${widget.chatInfo.id}');
 
-      // Store this chat in a "hidden chats" list so it doesn't appear in user's list
-      final hiddenKey = widget.chatInfo.isTeam
-          ? 'hidden_team_${widget.chatInfo.id}'
-          : 'hidden_chat_${widget.chatInfo.id}';
-
-      // Mark this chat as hidden for this user only
-      await CacheHelper.putData(key: hiddenKey, value: true);
+      // Mark this chat as deleted from user's list
+      _saveDeleteStatusToStorage(true);
 
       if (mounted) {
-        // Clear leave status from storage since chat is being hidden
-        _saveLeaveStatusToStorage(false);
-
         context.pop(); // Navigate back to chat list
         AppFunctions.showToast(
           message: 'Chat removed from your list successfully',
@@ -593,17 +600,9 @@ class _ChatScreenState extends State<ChatScreen>
         if (kDebugMode)
           print('Leaving and deleting chat: ${widget.chatInfo.id}');
 
-        if (widget.chatInfo.isTeam) {
-          // Delete team from teams list
-          final teamsCubit = context.read<teams.TeamsCubit>();
-          await teamsCubit.deleteTeam(widget.chatInfo.id);
-        } else {
-          // Delete user chat from chat list
-          final homeCubit = context.read<HomeCubit>();
-          await homeCubit.deleteChat(
-            widget.chatInfo.userChatId ?? widget.chatInfo.id,
-          );
-        }
+        // Set both leave and delete status to true
+        _saveLeaveStatusToStorage(true);
+        _saveDeleteStatusToStorage(true);
 
         if (mounted) {
           context.pop(); // Navigate back to chat list
@@ -627,6 +626,7 @@ class _ChatScreenState extends State<ChatScreen>
         if (mounted) {
           setState(() {
             _hasLeftChat = true; // Set leave flag
+            _isDeletedFromList = false; // Set delete flag
           });
 
           // Save leave status to persistent storage

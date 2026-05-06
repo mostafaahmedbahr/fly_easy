@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:new_fly_easy_new/core/cache/cache_helper.dart';
 import 'package:new_fly_easy_new/core/hive/hive_utils.dart';
 import 'package:new_fly_easy_new/core/injection/di_container.dart';
 import 'package:new_fly_easy_new/core/network/connection.dart';
@@ -19,25 +20,43 @@ class TeamsCubit extends Cubit<TeamsState> {
   TeamsCubit() : super(TeamsInitial());
 
   static const _pageSize = 15;
-  final PagingController<int, TeamModel> joinedTeamsPagingController = PagingController<int, TeamModel>(
-          firstPageKey: 1, invisibleItemsThreshold: 1);
-  final PagingController<int, TeamModel> adminTeamsPagingController = PagingController<int, TeamModel>(
-          firstPageKey: 1, invisibleItemsThreshold: 1);
-  final PagingController<int, TeamModel> archivedTeamsPagingController = PagingController<int, TeamModel>(
-          firstPageKey: 1, invisibleItemsThreshold: 1);
+  final PagingController<int, TeamModel> joinedTeamsPagingController =
+      PagingController<int, TeamModel>(
+        firstPageKey: 1,
+        invisibleItemsThreshold: 1,
+      );
+  final PagingController<int, TeamModel> adminTeamsPagingController =
+      PagingController<int, TeamModel>(
+        firstPageKey: 1,
+        invisibleItemsThreshold: 1,
+      );
+  final PagingController<int, TeamModel> archivedTeamsPagingController =
+      PagingController<int, TeamModel>(
+        firstPageKey: 1,
+        invisibleItemsThreshold: 1,
+      );
 
   Future<void> getJoinedTeams(int pageKey) async {
     if (await sl<InternetStatus>().checkConnectivity()) {
       try {
-        final Map<String, dynamic> queryParameters = {
-          'page': pageKey,
-        };
+        final Map<String, dynamic> queryParameters = {'page': pageKey};
         final Response response = await DioHelper.getData(
-            path: EndPoints.guestChannels, query: queryParameters);
+          path: EndPoints.guestChannels,
+          query: queryParameters,
+        );
         if (response.statusCode == 200) {
           List<TeamModel> list = [];
           response.data['data'].forEach((team) {
-            list.add(TeamModel.fromJson(team));
+            final teamModel = TeamModel.fromJson(team);
+
+            // Check if this team is deleted from local cache
+            final deleteKey = 'deleted_team_${teamModel.id}';
+            final isDeleted = CacheHelper.getData(key: deleteKey) ?? false;
+
+            // Only add non-deleted teams to the list
+            if (!isDeleted) {
+              list.add(teamModel);
+            }
           });
           final isLastPage = response.data['data'].length < _pageSize;
           if (isLastPage) {
@@ -57,18 +76,28 @@ class TeamsCubit extends Cubit<TeamsState> {
       joinedTeamsPagingController.error = errorMessage;
     }
   }
+
   Future<void> getAdminTeams(int pageKey) async {
     if (await sl<InternetStatus>().checkConnectivity()) {
       try {
-        final Map<String, dynamic> queryParameters = {
-          'page': pageKey,
-        };
+        final Map<String, dynamic> queryParameters = {'page': pageKey};
         final Response response = await DioHelper.getData(
-            path: EndPoints.adminChannels, query: queryParameters);
+          path: EndPoints.adminChannels,
+          query: queryParameters,
+        );
         if (response.statusCode == 200) {
           List<TeamModel> list = [];
           response.data['data'].forEach((team) {
-            list.add(TeamModel.fromJson(team));
+            final teamModel = TeamModel.fromJson(team);
+
+            // Check if this team is deleted from local cache
+            final deleteKey = 'deleted_team_${teamModel.id}';
+            final isDeleted = CacheHelper.getData(key: deleteKey) ?? false;
+
+            // Only add non-deleted teams to list
+            if (!isDeleted) {
+              list.add(teamModel);
+            }
           });
           final isLastPage = response.data['data'].length < _pageSize;
           if (isLastPage) {
@@ -89,14 +118,15 @@ class TeamsCubit extends Cubit<TeamsState> {
       emit(GetAdminChannelsError(errorMessage));
     }
   }
+
   Future<void> getArchivedTeams(int pageKey) async {
     if (await sl<InternetStatus>().checkConnectivity()) {
       try {
-        final Map<String, dynamic> queryParameters = {
-          'page': pageKey,
-        };
+        final Map<String, dynamic> queryParameters = {'page': pageKey};
         final Response response = await DioHelper.getData(
-            path: EndPoints.archivedChannels, query: queryParameters);
+          path: EndPoints.archivedChannels,
+          query: queryParameters,
+        );
         if (response.statusCode == 200) {
           List<TeamModel> list = [];
           response.data['data'].forEach((team) {
@@ -125,8 +155,13 @@ class TeamsCubit extends Cubit<TeamsState> {
     emit(DeleteTeamLoad());
     try {
       final response = await DioHelper.deleteData(
-          path: '${EndPoints.deleteChannel}/$teamId');
+        path: '${EndPoints.deleteChannel}/$teamId',
+      );
       if (response.statusCode == 200) {
+        // Save deletion status to local cache
+        final deleteKey = 'deleted_team_$teamId';
+        await CacheHelper.putData(key: deleteKey, value: true);
+
         UserModel updatedUserCharge = UserModel.fromJson(response.data['data']);
         await HiveUtils.setUserData(updatedUserCharge);
         emit(DeleteTeamSuccess(teamId));
@@ -140,7 +175,8 @@ class TeamsCubit extends Cubit<TeamsState> {
     emit(DeleteTeamLoad());
     try {
       final response = await DioHelper.deleteData(
-          path: '${EndPoints.deleteChannel}/$communityId');
+        path: '${EndPoints.deleteChannel}/$communityId',
+      );
       if (response.statusCode == 200) {
         UserModel updatedUserCharge = UserModel.fromJson(response.data['data']);
         await HiveUtils.setUserData(updatedUserCharge);
@@ -150,11 +186,17 @@ class TeamsCubit extends Cubit<TeamsState> {
       emit(DeleteChannelError(sl<ErrorModel>().getErrorMessage(error)));
     }
   }
-  Future<void> deleteSubCommunitySuccess(int teamId, int communityId, int subCommunityId) async {
+
+  Future<void> deleteSubCommunitySuccess(
+    int teamId,
+    int communityId,
+    int subCommunityId,
+  ) async {
     emit(DeleteTeamLoad());
     try {
       final response = await DioHelper.deleteData(
-          path: '${EndPoints.deleteChannel}/$subCommunityId');
+        path: '${EndPoints.deleteChannel}/$subCommunityId',
+      );
       if (response.statusCode == 200) {
         UserModel updatedUserCharge = UserModel.fromJson(response.data['data']);
         await HiveUtils.setUserData(updatedUserCharge);
@@ -169,7 +211,9 @@ class TeamsCubit extends Cubit<TeamsState> {
     emit(AddToArchiveLoad());
     try {
       final response = await DioHelper.postData(
-          path: EndPoints.archiveChannel, data: {'channel_id': channelId});
+        path: EndPoints.archiveChannel,
+        data: {'channel_id': channelId},
+      );
       if (response.statusCode == 200) {
         emit(AddToArchiveSuccess(channelId));
       }
@@ -182,7 +226,8 @@ class TeamsCubit extends Cubit<TeamsState> {
     emit(DeleteArchiveLoad());
     try {
       final response = await DioHelper.deleteData(
-          path: '${EndPoints.deleteChannel}/$channelId');
+        path: '${EndPoints.deleteChannel}/$channelId',
+      );
       if (response.statusCode == 200) {
         UserModel updatedUserCharge = UserModel.fromJson(response.data['data']);
         await HiveUtils.setUserData(updatedUserCharge);
@@ -197,7 +242,9 @@ class TeamsCubit extends Cubit<TeamsState> {
     emit(DuplicateChannelLoad());
     try {
       final response = await DioHelper.postData(
-          path: EndPoints.duplicateChannel, data: {'channel_id': channelId});
+        path: EndPoints.duplicateChannel,
+        data: {'channel_id': channelId},
+      );
       if (response.statusCode == 200) {
         UserModel updatedUserCharge = UserModel.fromJson(response.data['data']);
         await HiveUtils.setUserData(updatedUserCharge);

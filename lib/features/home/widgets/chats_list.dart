@@ -74,7 +74,6 @@ class _ChatsListState extends State<ChatsList> {
     return PhoneUtils.findContactByPhone(chat.phone, _globalCubit.allContacts);
   }
 
-
   @override
   Widget build(BuildContext context) {
     return BlocListener<GlobalAppCubit, GlobalAppState>(
@@ -101,9 +100,15 @@ class _ChatsListState extends State<ChatsList> {
     return RefreshIndicator.adaptive(
       color: AppColors.lightPrimaryColor,
       onRefresh: _onRefresh,
-      child: BlocBuilder<HomeCubit, HomeState>(
-        buildWhen: (_, state) => state is DeleteChatSuccess,
-        builder: (_, __) => PagedListView.separated(
+      child: BlocListener<HomeCubit, HomeState>(
+        listener: (context, state) {
+          if (state is DeleteChatSuccess) {
+            // Multiple refresh methods to ensure it works
+            widget.chatsPagingController.refresh();
+            _onRefresh();
+          }
+        },
+        child: PagedListView.separated(
           padding: EdgeInsets.only(bottom: 10.h),
           pagingController: widget.chatsPagingController,
           separatorBuilder: (_, __) => SizedBox(height: 15.h),
@@ -128,7 +133,11 @@ class _ChatsListState extends State<ChatsList> {
                           context,
                           title: LocaleKeys.do_you_want_delete_chat.tr(),
                           actionName: LocaleKeys.delete.tr(),
-                          onPress: () => _homeCubit.deleteChat(chat.id),
+                          onPress: () async {
+                            await _homeCubit.deleteChat(chat.id);
+                            // Use the same refresh method as manual refresh
+                            await _onRefresh();
+                          },
                         ),
                       ),
                     ],
@@ -138,10 +147,9 @@ class _ChatsListState extends State<ChatsList> {
               },
             ),
             firstPageProgressIndicatorBuilder: (_) =>
-            const SizedBox.shrink(), // لا نظهر لودينغ أولي
-            firstPageErrorIndicatorBuilder: (_) => TeamsErrorView(
-              message: widget.chatsPagingController.error,
-            ),
+                const SizedBox.shrink(), // لا نظهر لودينغ أولي
+            firstPageErrorIndicatorBuilder: (_) =>
+                TeamsErrorView(message: widget.chatsPagingController.error),
             noItemsFoundIndicatorBuilder: (_) => Center(
               child: EmptyWidget(
                 text: LocaleKeys.no_chats.tr(),
@@ -149,7 +157,7 @@ class _ChatsListState extends State<ChatsList> {
               ),
             ),
             newPageProgressIndicatorBuilder: (_) =>
-            const Center(child: MyProgress()),
+                const Center(child: MyProgress()),
           ),
         ),
       ),

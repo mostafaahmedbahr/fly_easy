@@ -6,6 +6,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:new_fly_easy_new/core/utils/app_functions.dart';
 import 'package:new_fly_easy_new/core/utils/app_icons.dart';
 import 'package:new_fly_easy_new/core/utils/colors.dart';
+import 'package:new_fly_easy_new/core/utils/enums.dart';
 import 'package:new_fly_easy_new/core/utils/images.dart';
 import 'package:new_fly_easy_new/core/widgets/empty_widget.dart';
 import 'package:new_fly_easy_new/core/widgets/my_progress.dart';
@@ -45,22 +46,61 @@ class _AdminTeamsViewState extends State<AdminTeamsView>
     return RefreshIndicator(
       onRefresh: () async => cubit.adminTeamsPagingController.refresh(),
       color: AppColors.lightPrimaryColor,
-      child: BlocBuilder<TeamsCubit, TeamsState>(
-        buildWhen: (previous, current) =>
-            current is DeleteTeamSuccess ||
-            current is AddToArchiveSuccess ||
-            current is DeleteCommunitySuccess ||
-            current is DeleteSubCommunitySuccess,
-        builder: (context, state) => PagedListView.separated(
-          padding: EdgeInsets.only(left: 15.w, right: 15.w, bottom: 30.h, top: 15.h),
-          separatorBuilder: (context, index) => SizedBox(
-            height: 15.h,
-          ),
-          pagingController: cubit.adminTeamsPagingController,
-          builderDelegate: PagedChildBuilderDelegate<TeamModel>(
-            itemBuilder: (context, item, index) => Slidable(
-              key: ObjectKey(item.id),
-              startActionPane: ActionPane(
+      child: BlocListener<TeamsCubit, TeamsState>(
+        listener: (context, state) {
+          if (state is DeleteTeamSuccess) {
+            cubit.adminTeamsPagingController.refresh();
+            cubit.joinedTeamsPagingController.refresh();
+            cubit.archivedTeamsPagingController.refresh();
+            AppFunctions.showToast(
+              message: 'Team deleted successfully',
+              state: ToastStates.success,
+            );
+          } else if (state is AddToArchiveSuccess) {
+            cubit.adminTeamsPagingController.refresh();
+            cubit.joinedTeamsPagingController.refresh();
+            cubit.archivedTeamsPagingController.refresh();
+            AppFunctions.showToast(
+              message: 'Team archived successfully',
+              state: ToastStates.success,
+            );
+          } else if (state is DeleteCommunitySuccess) {
+            cubit.adminTeamsPagingController.refresh();
+            cubit.joinedTeamsPagingController.refresh();
+            cubit.archivedTeamsPagingController.refresh();
+            AppFunctions.showToast(
+              message: 'Community deleted successfully',
+              state: ToastStates.success,
+            );
+          } else if (state is DeleteSubCommunitySuccess) {
+            cubit.adminTeamsPagingController.refresh();
+            cubit.joinedTeamsPagingController.refresh();
+            cubit.archivedTeamsPagingController.refresh();
+            AppFunctions.showToast(
+              message: 'Sub-community deleted successfully',
+              state: ToastStates.success,
+            );
+          }
+        },
+        child: BlocBuilder<TeamsCubit, TeamsState>(
+          buildWhen: (previous, current) =>
+              current is DeleteTeamSuccess ||
+              current is AddToArchiveSuccess ||
+              current is DeleteCommunitySuccess ||
+              current is DeleteSubCommunitySuccess,
+          builder: (context, state) => PagedListView.separated(
+            padding: EdgeInsets.only(
+              left: 15.w,
+              right: 15.w,
+              bottom: 30.h,
+              top: 15.h,
+            ),
+            separatorBuilder: (context, index) => SizedBox(height: 15.h),
+            pagingController: cubit.adminTeamsPagingController,
+            builderDelegate: PagedChildBuilderDelegate<TeamModel>(
+              itemBuilder: (context, item, index) => Slidable(
+                key: ObjectKey(item.id),
+                startActionPane: ActionPane(
                   motion: const BehindMotion(),
                   extentRatio: .45,
                   children: [
@@ -80,9 +120,7 @@ class _AdminTeamsViewState extends State<AdminTeamsView>
                       },
                       icon: Icons.archive,
                     ),
-                    SizedBox(
-                      width: 5.w,
-                    ),
+                    SizedBox(width: 5.w),
                     SlidableAction(
                       borderRadius: const BorderRadius.all(Radius.circular(10)),
                       backgroundColor: Colors.red,
@@ -92,28 +130,33 @@ class _AdminTeamsViewState extends State<AdminTeamsView>
                           context,
                           title: LocaleKeys.do_you_want_delete_team.tr(),
                           actionName: LocaleKeys.delete.tr(),
-                          onPress: () {
-                            cubit.deleteTeam(item.id);
+                          onPress: () async {
+                            await cubit.deleteTeam(item.id);
+                            // Also refresh all lists directly
+                            cubit.adminTeamsPagingController.refresh();
+                            cubit.joinedTeamsPagingController.refresh();
+                            cubit.archivedTeamsPagingController.refresh();
                           },
                         );
                       },
                       icon: AppIcons.delete,
                     ),
-                    SizedBox(
-                      width: 5.w,
-                    )
-                  ]),
-              child: TeamItem(
-                team: item,
-                isAdmin: true,
+                    SizedBox(width: 5.w),
+                  ],
+                ),
+                child: TeamItem(team: item, isAdmin: true),
               ),
+              firstPageProgressIndicatorBuilder: (_) =>
+                  const Center(child: MyProgress()),
+              firstPageErrorIndicatorBuilder: (context) => TeamsErrorView(
+                message: cubit.adminTeamsPagingController.error,
+              ),
+              noItemsFoundIndicatorBuilder: (context) => const Center(
+                child: EmptyWidget(text: '', image: AppImages.emptyTeams),
+              ),
+              newPageProgressIndicatorBuilder: (_) =>
+                  const Center(child: MyProgress()),
             ),
-            firstPageProgressIndicatorBuilder: (_) => const Center(child: MyProgress()),
-            firstPageErrorIndicatorBuilder: (context) => TeamsErrorView(message: cubit.adminTeamsPagingController.error),
-            noItemsFoundIndicatorBuilder: (context) => const Center(
-              child: EmptyWidget(text: '', image: AppImages.emptyTeams),
-            ),
-            newPageProgressIndicatorBuilder: (_) => const Center(child: MyProgress()),
           ),
         ),
       ),

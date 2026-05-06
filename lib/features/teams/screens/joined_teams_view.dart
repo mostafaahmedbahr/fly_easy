@@ -17,15 +17,14 @@ import 'package:new_fly_easy_new/translations/locale_keys.g.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 
 class JoinedTeamsView extends StatefulWidget {
-  const JoinedTeamsView({
-    Key? key,
-  }) : super(key: key);
+  const JoinedTeamsView({Key? key}) : super(key: key);
 
   @override
   State<JoinedTeamsView> createState() => _JoinedTeamsViewState();
 }
 
-class _JoinedTeamsViewState extends State<JoinedTeamsView> with AutomaticKeepAliveClientMixin<JoinedTeamsView> {
+class _JoinedTeamsViewState extends State<JoinedTeamsView>
+    with AutomaticKeepAliveClientMixin<JoinedTeamsView> {
   TeamsCubit get cubit => context.read<TeamsCubit>();
 
   void _getInitialJoinedTeams() {
@@ -43,44 +42,54 @@ class _JoinedTeamsViewState extends State<JoinedTeamsView> with AutomaticKeepAli
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return BlocConsumer<GlobalAppCubit, GlobalAppState>(
-      listenWhen: (previous, current) => current is RemoveTeamAfterLeave,
+    return BlocConsumer<TeamsCubit, TeamsState>(
       listener: (context, state) {
-        if (state is RemoveTeamAfterLeave) {
+        if (state is DeleteTeamSuccess) {
+          cubit.joinedTeamsPagingController.refresh();
+          cubit.adminTeamsPagingController.refresh();
+          cubit.archivedTeamsPagingController.refresh();
+          AppFunctions.showToast(
+            message: 'Team deleted successfully',
+            state: ToastStates.success,
+          );
+        } else if (state is RemoveTeamAfterLeave) {
           // widget.joinedTeamsPagingController.itemList!.removeWhere((element) => element.id==state.teamId);
           cubit.joinedTeamsPagingController.refresh();
+          cubit.adminTeamsPagingController.refresh();
+          cubit.archivedTeamsPagingController.refresh();
           AppFunctions.showToast(
-              message: LocaleKeys.you_left_the_team.tr(),
-              state: ToastStates.error);
+            message: LocaleKeys.you_left_the_team.tr(),
+            state: ToastStates.error,
+          );
         }
       },
-      buildWhen: (previous, current) => current is RemoveTeamAfterLeave,
       builder: (context, state) => RefreshIndicator(
         onRefresh: () async => cubit.joinedTeamsPagingController.refresh(),
         color: AppColors.lightPrimaryColor,
         child: PagedListView.separated(
-          padding:
-              EdgeInsets.only(left: 15.w, right: 15.w, bottom: 30.h, top: 15.h),
-          separatorBuilder: (context, index) => SizedBox(
-            height: 15.h,
+          padding: EdgeInsets.only(
+            left: 15.w,
+            right: 15.w,
+            bottom: 30.h,
+            top: 15.h,
           ),
+          separatorBuilder: (context, index) => SizedBox(height: 15.h),
           pagingController: cubit.joinedTeamsPagingController,
           builderDelegate: PagedChildBuilderDelegate<TeamModel>(
-              itemBuilder: (context, item, index) => TeamItem(
-                key: ObjectKey(item),
-                    team: item,
-                    isAdmin: false,
-                  ),
-              firstPageProgressIndicatorBuilder: (_) =>
-                  const Center(child: MyProgress()),
-              firstPageErrorIndicatorBuilder: (context) => TeamsErrorView(
-                  message: cubit.joinedTeamsPagingController.error),
-              noItemsFoundIndicatorBuilder: (context) => const Center(
-                    child: EmptyWidget(text: '', image: AppImages.emptyTeams),
-                    // EmptyWidget(text: 'You have not any notifications'),
-                  ),
-              newPageProgressIndicatorBuilder: (_) =>
-                  const Center(child: MyProgress())),
+            itemBuilder: (context, item, index) =>
+                TeamItem(key: ObjectKey(item), team: item, isAdmin: false),
+            firstPageProgressIndicatorBuilder: (_) =>
+                const Center(child: MyProgress()),
+            firstPageErrorIndicatorBuilder: (context) => TeamsErrorView(
+              message: cubit.joinedTeamsPagingController.error,
+            ),
+            noItemsFoundIndicatorBuilder: (context) => const Center(
+              child: EmptyWidget(text: '', image: AppImages.emptyTeams),
+              // EmptyWidget(text: 'You have not any notifications'),
+            ),
+            newPageProgressIndicatorBuilder: (_) =>
+                const Center(child: MyProgress()),
+          ),
         ),
       ),
     );
