@@ -24,8 +24,7 @@ import 'package:new_fly_easy_new/translations/locale_keys.g.dart';
 
 class AddCommunitySheet extends StatefulWidget {
   const AddCommunitySheet(
-      {Key? key, this.parentId, required this.level, this.isEdit = false})
-      : super(key: key);
+      {super.key, this.parentId, required this.level, this.isEdit = false});
   final int? parentId;
   final bool isEdit;
   final int level;

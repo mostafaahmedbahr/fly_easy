@@ -103,9 +103,8 @@ class _ChatsListState extends State<ChatsList> {
       child: BlocListener<HomeCubit, HomeState>(
         listener: (context, state) {
           if (state is DeleteChatSuccess) {
-            // Multiple refresh methods to ensure it works
+            // Refresh the chat list to remove deleted item
             widget.chatsPagingController.refresh();
-            _onRefresh();
           }
         },
         child: PagedListView.separated(
@@ -135,8 +134,8 @@ class _ChatsListState extends State<ChatsList> {
                           actionName: LocaleKeys.delete.tr(),
                           onPress: () async {
                             await _homeCubit.deleteChat(chat.id);
-                            // Use the same refresh method as manual refresh
-                            await _onRefresh();
+                            // Also refresh the list directly
+                            widget.chatsPagingController.refresh();
                           },
                         ),
                       ),
