@@ -21,10 +21,7 @@ class TeamsBlocListener extends StatelessWidget {
             state: ToastStates.error,
           );
         } else if (state is DeleteTeamSuccess) {
-          // Refresh all team lists to make deleted team disappear instantly
-          context.read<TeamsCubit>().adminTeamsPagingController.refresh();
-          context.read<TeamsCubit>().joinedTeamsPagingController.refresh();
-          context.read<TeamsCubit>().archivedTeamsPagingController.refresh();
+          // Just close dialog - let TeamsBlocListener handle the refresh
           Navigator.of(context, rootNavigator: true).pop();
         } else if (state is RefreshTeamsLoad) {
           // Show loading indicator for refresh

@@ -63,7 +63,9 @@ class TeamsCubit extends Cubit<TeamsState> {
               list.add(teamModel);
             } else {
               if (kDebugMode) {
-                print('Filtering out joined team ${teamModel.id}: deleted=$isDeleted, left=$isLeft');
+                print(
+                  'Filtering out joined team ${teamModel.id}: deleted=$isDeleted, left=$isLeft',
+                );
               }
             }
           });
@@ -112,7 +114,9 @@ class TeamsCubit extends Cubit<TeamsState> {
               list.add(teamModel);
             } else {
               if (kDebugMode) {
-                print('Filtering out admin team ${teamModel.id}: deleted=$isDeleted, left=$isLeft');
+                print(
+                  'Filtering out admin team ${teamModel.id}: deleted=$isDeleted, left=$isLeft',
+                );
               }
             }
           });
@@ -162,7 +166,9 @@ class TeamsCubit extends Cubit<TeamsState> {
               list.add(teamModel);
             } else {
               if (kDebugMode) {
-                print('Filtering out archived team ${teamModel.id}: deleted=$isDeleted, left=$isLeft');
+                print(
+                  'Filtering out archived team ${teamModel.id}: deleted=$isDeleted, left=$isLeft',
+                );
               }
             }
           });
@@ -281,27 +287,28 @@ class TeamsCubit extends Cubit<TeamsState> {
       emit(DuplicateChannelError(sl<ErrorModel>().getErrorMessage(error)));
     }
   }
-  
+
   // Dedicated method to refresh all team lists - called from other screens
   void refreshAllTeamLists() {
     try {
       // Emit loading state
       emit(RefreshTeamsLoad());
-      
+
       // Force refresh all paging controllers
       adminTeamsPagingController.refresh();
       joinedTeamsPagingController.refresh();
       archivedTeamsPagingController.refresh();
-      
+
       // Notify listeners to trigger UI update
       adminTeamsPagingController.notifyPageRequestListeners(1);
       joinedTeamsPagingController.notifyPageRequestListeners(1);
       archivedTeamsPagingController.notifyPageRequestListeners(1);
-      
+
       // Emit success state
       emit(RefreshTeamsSuccess());
-      
-      if (kDebugMode) print('TeamsCubit: All team lists refreshed successfully');
+
+      if (kDebugMode)
+        print('TeamsCubit: All team lists refreshed successfully');
     } catch (e) {
       if (kDebugMode) print('TeamsCubit: Error refreshing team lists: $e');
     }

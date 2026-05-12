@@ -24,7 +24,16 @@ class AppRouter {
           child: const ForgetPasswordScreen(),
         ));
       case Routes.layout:
-        return _getPageRoute(ShowCaseWidget(builder:(context) =>   LayoutScreen(initialIndex: 0,),));
+
+        final int index = settings.arguments as int? ?? 0;
+
+        return _getPageRoute(
+          ShowCaseWidget(
+            builder: (context) => LayoutScreen(
+              initialIndex: index,
+            ),
+          ),
+        );
       case Routes.inviteMembers:
         InviteIdentifier args = settings.arguments as InviteIdentifier;
         return _getPageRoute(BlocProvider(

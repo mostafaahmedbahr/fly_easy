@@ -50,9 +50,9 @@ class HomeCubit extends Cubit<HomeState> {
   static const _pageSize = 15;
 
   Future<void> getChatsNew(
-    int pageKey,
-    PagingController<int, UserChatModel> pagingController,
-  ) async {
+      int pageKey,
+      PagingController<int, UserChatModel> pagingController,
+      ) async {
     if (await sl<InternetStatus>().checkConnectivity()) {
       try {
         final Map<String, dynamic> queryParameters = {'page': pageKey};

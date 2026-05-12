@@ -103,30 +103,34 @@ class _TeamsScreenState extends State<TeamsScreen> with SingleTickerProviderStat
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _appBar(),
-      body: Container(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        child: Column(
-          children: [
-            const TeamsGlobalStateListener(),
-            const TeamsBlocListener(),
-            TeamsTabBar(
-              tabController: _tabController,
-              archiveHintKey: _archiveHintKey,
-            ),
-            SizedBox(height: 24,),
-            HomeSliderImages(),
-            SizedBox(height: 12,),
-            Expanded(
-                child: TabBarView(
-                    physics: const NeverScrollableScrollPhysics(),
-                    controller: _tabController,
-                    children: const [
-                      AdminTeamsView(),
-                      JoinedTeamsView(),
-                      ArchivedTeamsView()
-                    ])),
-          ],
-        ),
+      body: BlocBuilder<TeamsCubit , TeamsState>(
+       builder: (context,state){
+         return  Container(
+           color: Theme.of(context).scaffoldBackgroundColor,
+           child: Column(
+             children: [
+               const TeamsGlobalStateListener(),
+               const TeamsBlocListener(),
+               TeamsTabBar(
+                 tabController: _tabController,
+                 archiveHintKey: _archiveHintKey,
+               ),
+               SizedBox(height: 24,),
+               HomeSliderImages(),
+               SizedBox(height: 12,),
+               Expanded(
+                   child: TabBarView(
+                       physics: const NeverScrollableScrollPhysics(),
+                       controller: _tabController,
+                       children: const [
+                         AdminTeamsView(),
+                         JoinedTeamsView(),
+                         ArchivedTeamsView()
+                       ])),
+             ],
+           ),
+         );
+       },
       )
     );
   }

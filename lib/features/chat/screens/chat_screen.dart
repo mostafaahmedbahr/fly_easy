@@ -7,14 +7,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:new_fly_easy_new/app/app_bloc/app_cubit.dart';
 import 'package:new_fly_easy_new/core/cache/cache_helper.dart';
-import 'package:new_fly_easy_new/core/hive/hive_utils.dart';
 import 'package:new_fly_easy_new/core/network/dio_helper.dart';
 import 'package:new_fly_easy_new/core/utils/app_extensions.dart';
 import 'package:new_fly_easy_new/core/utils/app_functions.dart';
 import 'package:new_fly_easy_new/core/utils/enums.dart';
 import 'package:new_fly_easy_new/core/widgets/dialog_progress_indicator.dart';
 import 'package:new_fly_easy_new/features/chat/bloc/chat_cubit.dart';
-import 'package:new_fly_easy_new/features/chat/models/chat_info_model.dart';
 import 'package:new_fly_easy_new/features/chat/models/chat_info/team_chat_info_model.dart';
 import 'package:new_fly_easy_new/features/chat/widgets/lower_section.dart';
 import 'package:new_fly_easy_new/features/chat/widgets/messages_list.dart';
@@ -22,22 +20,18 @@ import 'package:new_fly_easy_new/features/chat_media/bloc/team_chat_media_bloc/c
 import 'package:new_fly_easy_new/features/chat_media/bloc/user_chat_media_bloc/user_chat_media_cubit.dart';
 import 'package:new_fly_easy_new/features/chat_media/screens/team/chat_settings_screen.dart';
 import 'package:new_fly_easy_new/features/chat_media/screens/user/user_chat_settings_screen.dart';
-import 'package:new_fly_easy_new/features/home/bloc/home_cubit.dart';
-import 'package:new_fly_easy_new/features/teams/bloc/teams_cubit.dart' as teams;
 import 'package:new_fly_easy_new/features/teams/screens/teams_screen.dart';
 import 'package:iconly/iconly.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
-import 'package:zego_zim/zego_zim.dart';
-
 import '../../../core/routing/routes.dart';
 import '../../../core/utils/colors.dart';
-import '../../layout/screens/layout_screen.dart';
+import '../../teams/bloc/teams_cubit.dart';
 import '../bloc/chat_cubit.dart' as chat_state;
 import 'call_screen.dart';
 
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({Key? key, required this.chatInfo}) : super(key: key);
+  const ChatScreen({super.key, required this.chatInfo});
   final TeamChatInfoModel chatInfo;
 
   @override
@@ -148,8 +142,9 @@ class _ChatScreenState extends State<ChatScreen>
   // Rejoin chat functionality
   Future<void> _rejoinChat() async {
     try {
-      if (kDebugMode)
+      if (kDebugMode) {
         print('Rejoining chat: ${widget.chatInfo.id}');
+      }
 
       // Clear leave status from storage
       _saveLeaveStatusToStorage(false);
@@ -201,30 +196,13 @@ class _ChatScreenState extends State<ChatScreen>
       
       // Also try direct refresh as backup
       try {
-        context.read<teams.TeamsCubit>().adminTeamsPagingController.refresh();
-        context.read<teams.TeamsCubit>().joinedTeamsPagingController.refresh();
-        context.read<teams.TeamsCubit>().archivedTeamsPagingController.refresh();
+        context.read<TeamsCubit>().adminTeamsPagingController.refresh();
+        context.read<TeamsCubit>().joinedTeamsPagingController.refresh();
+        context.read<TeamsCubit>().archivedTeamsPagingController.refresh();
       } catch (e) {
         if (kDebugMode) print('Direct refresh failed: $e');
       }
-      
-      // Schedule additional refreshes to ensure it works
-      Future.delayed(const Duration(milliseconds: 500), () {
-        try {
-          TeamsScreen.refreshAllTeamLists(context);
-        } catch (e) {
-          if (kDebugMode) print('Delayed refresh failed: $e');
-        }
-      });
-      
-      Future.delayed(const Duration(milliseconds: 1000), () {
-        try {
-          TeamsScreen.refreshAllTeamLists(context);
-        } catch (e) {
-          if (kDebugMode) print('Second delayed refresh failed: $e');
-        }
-      });
-      
+
     } catch (e) {
       if (kDebugMode) print('Error refreshing team lists: $e');
     }
@@ -233,14 +211,27 @@ class _ChatScreenState extends State<ChatScreen>
   // Remove chat from user's personal list only
   Future<void> _removeChatFromList() async {
     try {
-      if (kDebugMode)
+      if (kDebugMode) {
         print('Removing chat from personal list: ${widget.chatInfo.id}');
+      }
 
       // Mark this chat as deleted from user's list
       _saveDeleteStatusToStorage(true);
 
       if (mounted) {
-        context.pop(); // Navigate back to chat list
+
+        Future.microtask(() {
+
+          if (!mounted) return;
+
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            Routes.layout,
+                (route) => false,
+            arguments: 1,
+          );
+
+        });
         AppFunctions.showToast(
           message: 'Chat removed from your list successfully',
           state: ToastStates.success,
@@ -807,6 +798,7 @@ class _ChatScreenState extends State<ChatScreen>
                       style: TextStyle(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w500,
+                        color: AppColors.lightPrimaryColor
                       ),
                     ),
                     SizedBox(height: 16.h),
@@ -815,6 +807,7 @@ class _ChatScreenState extends State<ChatScreen>
                       subtitle: Text('You can still read messages but cannot send. Chat remains visible.'),
                       value: 'leave_only',
                       groupValue: selectedOption,
+                      activeColor: AppColors.lightPrimaryColor,
                       onChanged: (value) {
                         setState(() {
                           selectedOption = value!;
@@ -826,6 +819,7 @@ class _ChatScreenState extends State<ChatScreen>
                       subtitle: Text('Chat will be completely removed from your list. You can restore it later.'),
                       value: 'leave_and_delete',
                       groupValue: selectedOption,
+                      activeColor: AppColors.lightPrimaryColor,
                       onChanged: (value) {
                         setState(() {
                           selectedOption = value!;
@@ -833,38 +827,38 @@ class _ChatScreenState extends State<ChatScreen>
                       },
                     ),
                     SizedBox(height: 16.h),
-                    Text(
-                      'Reason (optional):',
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    SizedBox(height: 8.h),
-                    TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Why are you leaving?',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 12.w,
-                          vertical: 8.h,
-                        ),
-                      ),
-                      maxLines: 2,
-                      onChanged: (value) {
-                        customReason = value.trim().isEmpty ? null : value.trim();
-                      },
-                    ),
-                    SizedBox(height: 8.h),
-                    Text(
-                      'This helps us improve the chat experience.',
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: Colors.grey[600],
-                      ),
-                    ),
+                    // Text(
+                    //   'Reason (optional):',
+                    //   style: TextStyle(
+                    //     fontSize: 14.sp,
+                    //     fontWeight: FontWeight.w500,
+                    //   ),
+                    // ),
+                    // SizedBox(height: 8.h),
+                    // TextField(
+                    //   decoration: InputDecoration(
+                    //     hintText: 'Why are you leaving?',
+                    //     border: OutlineInputBorder(
+                    //       borderRadius: BorderRadius.circular(8.r),
+                    //     ),
+                    //     contentPadding: EdgeInsets.symmetric(
+                    //       horizontal: 12.w,
+                    //       vertical: 8.h,
+                    //     ),
+                    //   ),
+                    //   maxLines: 2,
+                    //   onChanged: (value) {
+                    //     customReason = value.trim().isEmpty ? null : value.trim();
+                    //   },
+                    // ),
+                    // SizedBox(height: 8.h),
+                    // Text(
+                    //   'This helps us improve the chat experience.',
+                    //   style: TextStyle(
+                    //     fontSize: 12.sp,
+                    //     color: Colors.grey[600],
+                    //   ),
+                    // ),
                   ],
                 ),
               ),
@@ -873,17 +867,22 @@ class _ChatScreenState extends State<ChatScreen>
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
-                  child: Text('Cancel'),
+                  child: Text('Cancel',style: TextStyle(
+                    color: Colors.black
+                  ),),
                 ),
                 ElevatedButton(
                   onPressed: () => _executeLeaveAction(selectedOption, customReason),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: selectedOption == 'leave_and_delete' 
-                        ? Colors.purple 
-                        : Colors.orange,
+                        ?    AppColors.lightPrimaryColor
+                        :  Colors.black,
                     foregroundColor: Colors.white,
                   ),
-                  child: Text(selectedOption == 'leave_and_delete' ? 'Leave & Delete' : 'Leave'),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Text(selectedOption == 'leave_and_delete' ? 'Leave & Delete' : 'Leave'),
+                  ),
                 ),
               ],
             );
@@ -894,8 +893,9 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   void _executeLeaveAction(String selectedOption, [String? customReason]) async {
-    if (kDebugMode)
+    if (kDebugMode) {
       print('Executing leave action with option: $selectedOption, reason: $customReason');
+    }
 
     // Navigator.of(context).pop(); // Close dialog
 
@@ -906,8 +906,9 @@ class _ChatScreenState extends State<ChatScreen>
 
       if (selectedOption == 'leave_and_delete') {
         // Leave and delete - remove chat from list completely
-        if (kDebugMode)
+        if (kDebugMode) {
           print('Leaving and deleting chat: ${widget.chatInfo.id}');
+        }
 
         // Set both leave and delete status to true
         _saveLeaveStatusToStorage(true);
@@ -929,16 +930,20 @@ class _ChatScreenState extends State<ChatScreen>
           });
           print("111111111111111111");
           // Close dialog first
-          Navigator.of(context).pop();
-          
-          // Navigate directly to layout screen with Joined Teams tab
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const LayoutScreen(initialIndex: 1),
-            ),
-            (route) => false,
-          );
+          Navigator.pop(context);
+
+          Future.microtask(() {
+
+            if (!mounted) return;
+
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              Routes.layout,
+                  (route) => false,
+              arguments: 1,
+            );
+
+          });
           AppFunctions.showToast(
             message: 'Chat deleted for you successfully',
             state: ToastStates.success,
@@ -948,8 +953,9 @@ class _ChatScreenState extends State<ChatScreen>
         }
       } else {
         // Leave only - stay in chat but can't send messages
-        if (kDebugMode)
+        if (kDebugMode) {
           print('Leaving chat only (read-only): ${widget.chatInfo.id}');
+        }
 
         if (widget.chatInfo.isTeam) {
           await cubit.leaveTeamChat(widget.chatInfo.id);
@@ -965,7 +971,7 @@ class _ChatScreenState extends State<ChatScreen>
             _canRejoin = true;
             _leaveReason = reason;
           });
-
+          Navigator.of(context).pop();
           // Save leave status to persistent storage
           _saveLeaveStatusToStorage(true);
           _saveLeaveReasonToStorage(reason);
