@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:new_fly_easy_new/core/cache/cache_helper.dart';
 import 'package:new_fly_easy_new/core/hive/hive_utils.dart';
@@ -53,9 +54,17 @@ class TeamsCubit extends Cubit<TeamsState> {
             final deleteKey = 'deleted_team_${teamModel.id}';
             final isDeleted = CacheHelper.getData(key: deleteKey) ?? false;
 
-            // Only add non-deleted teams to the list
-            if (!isDeleted) {
+            // Check if this team is left by the user
+            final leaveKey = 'left_team_${teamModel.id}';
+            final isLeft = CacheHelper.getData(key: leaveKey) ?? false;
+
+            // Only add teams that are not deleted and not left
+            if (!isDeleted && !isLeft) {
               list.add(teamModel);
+            } else {
+              if (kDebugMode) {
+                print('Filtering out joined team ${teamModel.id}: deleted=$isDeleted, left=$isLeft');
+              }
             }
           });
           final isLastPage = response.data['data'].length < _pageSize;
@@ -94,9 +103,17 @@ class TeamsCubit extends Cubit<TeamsState> {
             final deleteKey = 'deleted_team_${teamModel.id}';
             final isDeleted = CacheHelper.getData(key: deleteKey) ?? false;
 
-            // Only add non-deleted teams to the list
-            if (!isDeleted) {
+            // Check if this team is left by the user
+            final leaveKey = 'left_team_${teamModel.id}';
+            final isLeft = CacheHelper.getData(key: leaveKey) ?? false;
+
+            // Only add teams that are not deleted and not left
+            if (!isDeleted && !isLeft) {
               list.add(teamModel);
+            } else {
+              if (kDebugMode) {
+                print('Filtering out admin team ${teamModel.id}: deleted=$isDeleted, left=$isLeft');
+              }
             }
           });
           final isLastPage = response.data['data'].length < _pageSize;
@@ -130,7 +147,24 @@ class TeamsCubit extends Cubit<TeamsState> {
         if (response.statusCode == 200) {
           List<TeamModel> list = [];
           response.data['data'].forEach((team) {
-            list.add(TeamModel.fromJson(team));
+            final teamModel = TeamModel.fromJson(team);
+
+            // Check if this team is deleted from local cache (user's list only)
+            final deleteKey = 'deleted_team_${teamModel.id}';
+            final isDeleted = CacheHelper.getData(key: deleteKey) ?? false;
+
+            // Check if this team is left by the user
+            final leaveKey = 'left_team_${teamModel.id}';
+            final isLeft = CacheHelper.getData(key: leaveKey) ?? false;
+
+            // Only add teams that are not deleted and not left
+            if (!isDeleted && !isLeft) {
+              list.add(teamModel);
+            } else {
+              if (kDebugMode) {
+                print('Filtering out archived team ${teamModel.id}: deleted=$isDeleted, left=$isLeft');
+              }
+            }
           });
           final isLastPage = response.data['data'].length < _pageSize;
           if (isLastPage) {
@@ -245,6 +279,31 @@ class TeamsCubit extends Cubit<TeamsState> {
       }
     } catch (error) {
       emit(DuplicateChannelError(sl<ErrorModel>().getErrorMessage(error)));
+    }
+  }
+  
+  // Dedicated method to refresh all team lists - called from other screens
+  void refreshAllTeamLists() {
+    try {
+      // Emit loading state
+      emit(RefreshTeamsLoad());
+      
+      // Force refresh all paging controllers
+      adminTeamsPagingController.refresh();
+      joinedTeamsPagingController.refresh();
+      archivedTeamsPagingController.refresh();
+      
+      // Notify listeners to trigger UI update
+      adminTeamsPagingController.notifyPageRequestListeners(1);
+      joinedTeamsPagingController.notifyPageRequestListeners(1);
+      archivedTeamsPagingController.notifyPageRequestListeners(1);
+      
+      // Emit success state
+      emit(RefreshTeamsSuccess());
+      
+      if (kDebugMode) print('TeamsCubit: All team lists refreshed successfully');
+    } catch (e) {
+      if (kDebugMode) print('TeamsCubit: Error refreshing team lists: $e');
     }
   }
 }

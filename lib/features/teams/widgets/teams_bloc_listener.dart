@@ -1,4 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:new_fly_easy_new/core/utils/app_functions.dart';
@@ -25,6 +26,12 @@ class TeamsBlocListener extends StatelessWidget {
           context.read<TeamsCubit>().joinedTeamsPagingController.refresh();
           context.read<TeamsCubit>().archivedTeamsPagingController.refresh();
           Navigator.of(context, rootNavigator: true).pop();
+        } else if (state is RefreshTeamsLoad) {
+          // Show loading indicator for refresh
+          if (kDebugMode) print('TeamsBlocListener: Refresh started');
+        } else if (state is RefreshTeamsSuccess) {
+          // Refresh completed successfully
+          if (kDebugMode) print('TeamsBlocListener: Refresh completed');
         } else if (state is DeleteCommunitySuccess) {
           context
               .read<TeamsCubit>()

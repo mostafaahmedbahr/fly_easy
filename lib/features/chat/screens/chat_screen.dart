@@ -24,12 +24,15 @@ import 'package:new_fly_easy_new/features/chat_media/screens/team/chat_settings_
 import 'package:new_fly_easy_new/features/chat_media/screens/user/user_chat_settings_screen.dart';
 import 'package:new_fly_easy_new/features/home/bloc/home_cubit.dart';
 import 'package:new_fly_easy_new/features/teams/bloc/teams_cubit.dart' as teams;
+import 'package:new_fly_easy_new/features/teams/screens/teams_screen.dart';
 import 'package:iconly/iconly.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 import 'package:zego_zim/zego_zim.dart';
 
+import '../../../core/routing/routes.dart';
 import '../../../core/utils/colors.dart';
+import '../../layout/screens/layout_screen.dart';
 import '../bloc/chat_cubit.dart' as chat_state;
 import 'call_screen.dart';
 
@@ -50,6 +53,8 @@ class _ChatScreenState extends State<ChatScreen>
   bool _getMoreData = false;
   bool _hasLeftChat = false; // Track if user has left chat (read-only state)
   bool _isDeletedFromList = false; // Track if user removed chat from list
+  bool _canRejoin = false; // Track if user can rejoin the chat
+  String? _leaveReason; // Reason for leaving the chat
 
   @override
   void initState() {
@@ -90,13 +95,20 @@ class _ChatScreenState extends State<ChatScreen>
         ? 'deleted_team_${widget.chatInfo.id}'
         : 'deleted_chat_${widget.chatInfo.id}';
 
+    final reasonKey = widget.chatInfo.isTeam
+        ? 'leave_reason_team_${widget.chatInfo.id}'
+        : 'leave_reason_chat_${widget.chatInfo.id}';
+
     final hasLeft = CacheHelper.getData(key: leaveKey) ?? false;
     final isDeleted = CacheHelper.getData(key: deleteKey) ?? false;
+    final reason = CacheHelper.getData(key: reasonKey) as String?;
 
     if (mounted) {
       setState(() {
         _hasLeftChat = hasLeft;
         _isDeletedFromList = isDeleted;
+        _canRejoin = hasLeft || isDeleted; // User can rejoin if they left or deleted
+        _leaveReason = reason;
       });
     }
   }
@@ -117,6 +129,105 @@ class _ChatScreenState extends State<ChatScreen>
         : 'deleted_chat_${widget.chatInfo.id}';
 
     CacheHelper.putData(key: deleteKey, value: isDeleted);
+
+  }
+
+  // Save leave reason to persistent storage
+  void _saveLeaveReasonToStorage(String? reason) {
+    final reasonKey = widget.chatInfo.isTeam
+        ? 'leave_reason_team_${widget.chatInfo.id}'
+        : 'leave_reason_chat_${widget.chatInfo.id}';
+
+    if (reason != null) {
+      CacheHelper.putData(key: reasonKey, value: reason);
+    } else {
+      CacheHelper.removeValue(key: reasonKey);
+    }
+  }
+
+  // Rejoin chat functionality
+  Future<void> _rejoinChat() async {
+    try {
+      if (kDebugMode)
+        print('Rejoining chat: ${widget.chatInfo.id}');
+
+      // Clear leave status from storage
+      _saveLeaveStatusToStorage(false);
+      _saveDeleteStatusToStorage(false);
+      _saveLeaveReasonToStorage(null);
+
+      if (widget.chatInfo.isTeam) {
+        await cubit.rejoinTeamChat(widget.chatInfo.id);
+      } else {
+        await cubit.rejoinUserChat(widget.chatInfo.id);
+      }
+
+      if (mounted) {
+        setState(() {
+          _hasLeftChat = false;
+          _isDeletedFromList = false;
+          _canRejoin = false;
+          _leaveReason = null;
+        });
+
+        AppFunctions.showToast(
+          message: 'You have rejoined this chat',
+          state: ToastStates.success,
+        );
+
+        // Refresh messages after rejoining
+        if (widget.chatInfo.isTeam) {
+          cubit.getTeamMessages();
+        } else {
+          cubit.getUserMessages();
+        }
+      }
+    } catch (error) {
+      if (kDebugMode) print('Error rejoining chat: $error');
+      if (mounted) {
+        AppFunctions.showToast(
+          message: 'Failed to rejoin chat: $error',
+          state: ToastStates.error,
+        );
+      }
+    }
+  }
+
+  // Helper method to refresh all team lists
+  void _refreshAllTeamLists() {
+    try {
+      // Use the static method from TeamsScreen
+      TeamsScreen.refreshAllTeamLists(context);
+      
+      // Also try direct refresh as backup
+      try {
+        context.read<teams.TeamsCubit>().adminTeamsPagingController.refresh();
+        context.read<teams.TeamsCubit>().joinedTeamsPagingController.refresh();
+        context.read<teams.TeamsCubit>().archivedTeamsPagingController.refresh();
+      } catch (e) {
+        if (kDebugMode) print('Direct refresh failed: $e');
+      }
+      
+      // Schedule additional refreshes to ensure it works
+      Future.delayed(const Duration(milliseconds: 500), () {
+        try {
+          TeamsScreen.refreshAllTeamLists(context);
+        } catch (e) {
+          if (kDebugMode) print('Delayed refresh failed: $e');
+        }
+      });
+      
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        try {
+          TeamsScreen.refreshAllTeamLists(context);
+        } catch (e) {
+          if (kDebugMode) print('Second delayed refresh failed: $e');
+        }
+      });
+      
+    } catch (e) {
+      if (kDebugMode) print('Error refreshing team lists: $e');
+    }
   }
 
   // Remove chat from user's personal list only
@@ -134,10 +245,9 @@ class _ChatScreenState extends State<ChatScreen>
           message: 'Chat removed from your list successfully',
           state: ToastStates.success,
         );
-        // Also refresh all lists directly
-        context.read<teams.TeamsCubit>().adminTeamsPagingController.refresh();
-        context.read<teams.TeamsCubit>().joinedTeamsPagingController.refresh();
-        context.read<teams.TeamsCubit>().archivedTeamsPagingController.refresh();
+        
+        // Refresh all team lists
+        _refreshAllTeamLists();
       }
     } catch (error) {
       if (kDebugMode) print('Error removing chat: $error');
@@ -188,14 +298,17 @@ class _ChatScreenState extends State<ChatScreen>
           body: Column(
             children: [
               // Show status message if user has left chat
-              if (_hasLeftChat)
+              if (_hasLeftChat || _isDeletedFromList)
                 Container(
                   width: double.infinity,
                   padding: EdgeInsets.all(16.w),
                   margin: EdgeInsets.all(16.w),
                   decoration: BoxDecoration(
-                    color: Colors.orange.withValues(alpha: 0.1),
-                    border: Border.all(color: Colors.orange),
+                    color: _isDeletedFromList 
+                        ? Colors.red.withValues(alpha: 0.1)
+                        : Colors.orange.withValues(alpha: 0.1),
+                    border: Border.all(
+                        color: _isDeletedFromList ? Colors.red : Colors.orange),
                     borderRadius: BorderRadius.circular(12.r),
                   ),
                   child: Column(
@@ -204,8 +317,8 @@ class _ChatScreenState extends State<ChatScreen>
                       Row(
                         children: [
                           Icon(
-                            Icons.info_outline,
-                            color: Colors.orange,
+                            _isDeletedFromList ? Icons.delete_forever : Icons.info_outline,
+                            color: _isDeletedFromList ? Colors.red : Colors.orange,
                             size: 24.sp,
                           ),
                           SizedBox(width: 12.w),
@@ -214,43 +327,78 @@ class _ChatScreenState extends State<ChatScreen>
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'You have left this chat',
+                                  _isDeletedFromList ? 'Chat deleted for you' : 'You have left this chat',
                                   style: TextStyle(
                                     fontSize: 16.sp,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.orange,
+                                    color: _isDeletedFromList ? Colors.red : Colors.orange,
                                   ),
                                 ),
                                 SizedBox(height: 4.h),
                                 Text(
-                                  'You can only read messages. To participate again, you need to rejoin this chat.',
+                                  _isDeletedFromList 
+                                      ? 'This chat has been removed from your list. You can restore it if you change your mind.'
+                                      : 'You can only read messages. To participate again, you need to rejoin this chat.',
                                   style: TextStyle(
                                     fontSize: 14.sp,
                                     color: Colors.grey[600],
                                   ),
                                 ),
+                                if (_leaveReason != null) ...[
+                                  SizedBox(height: 4.h),
+                                  Text(
+                                    'Reason: $_leaveReason',
+                                    style: TextStyle(
+                                      fontSize: 12.sp,
+                                      color: Colors.grey[500],
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ],
                               ],
                             ),
                           ),
                         ],
                       ),
                       SizedBox(height: 12.h),
-                      // Remove from list button
-                      Container(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: _removeChatFromList,
-                          icon: Icon(Icons.delete_forever, size: 18.sp),
-                          label: Text('Remove from List'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                            foregroundColor: Colors.white,
-                            padding: EdgeInsets.symmetric(vertical: 8.h),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8.r),
+                      Row(
+                        children: [
+                          // Rejoin button
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: _rejoinChat,
+                              icon: Icon(Icons.group_add, size: 18.sp),
+                              label: Text(_isDeletedFromList ? 'Restore Chat' : 'Rejoin Chat'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                foregroundColor: Colors.white,
+                                padding: EdgeInsets.symmetric(vertical: 8.h),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8.r),
+                                ),
+                              ),
                             ),
                           ),
-                        ),
+                          if (_hasLeftChat) ...[
+                            SizedBox(width: 8.w),
+                            // Remove from list button
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: _removeChatFromList,
+                                icon: Icon(Icons.delete_forever, size: 18.sp),
+                                label: Text('Remove from List'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red,
+                                  foregroundColor: Colors.white,
+                                  padding: EdgeInsets.symmetric(vertical: 8.h),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8.r),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ],
                   ),
@@ -258,30 +406,53 @@ class _ChatScreenState extends State<ChatScreen>
               Expanded(
                 child: MessagesList(scrollController: _scrollController),
               ),
-              // Disable input section if user has left chat
-              if (_hasLeftChat)
+              // Disable input section if user has left chat or deleted chat
+              if (_hasLeftChat || _isDeletedFromList)
                 Container(
                   padding: EdgeInsets.all(16.w),
                   decoration: BoxDecoration(
-                    color: Colors.grey.withValues(alpha: 0.1),
+                    color: _isDeletedFromList 
+                        ? Colors.red.withValues(alpha: 0.1)
+                        : Colors.grey.withValues(alpha: 0.1),
                     border: Border(
                       top: BorderSide(
-                        color: Colors.grey.withValues(alpha: 0.3),
+                        color: _isDeletedFromList 
+                            ? Colors.red.withValues(alpha: 0.3)
+                            : Colors.grey.withValues(alpha: 0.3),
                       ),
                     ),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.block, color: Colors.grey, size: 20.sp),
+                      Icon(
+                        _isDeletedFromList ? Icons.delete_forever : Icons.block,
+                        color: _isDeletedFromList ? Colors.red : Colors.grey,
+                        size: 20.sp,
+                      ),
                       SizedBox(width: 8.w),
-                      Text(
-                        'You cannot send messages in this chat',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          color: Colors.grey,
-                          fontStyle: FontStyle.italic,
+                      Expanded(
+                        child: Text(
+                          _isDeletedFromList 
+                              ? 'Chat deleted - Rejoin to send messages'
+                              : 'You cannot send messages in this chat',
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            color: _isDeletedFromList ? Colors.red : Colors.grey,
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
                       ),
+                      if (_canRejoin)
+                        TextButton(
+                          onPressed: _rejoinChat,
+                          child: Text(
+                            'Rejoin',
+                            style: TextStyle(
+                              color: Colors.green,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 )
@@ -360,6 +531,98 @@ class _ChatScreenState extends State<ChatScreen>
           create: (context) => UserChatMediaCubit(),
           child: UserChatSettingsScreen(userId: widget.chatInfo.id),
         ),
+      ),
+    );
+  }
+
+  // Show chat info dialog for left/deleted chats
+  void _showChatInfoDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            CircleAvatar(
+              radius: 20.w,
+              backgroundColor: Colors.grey.withValues(alpha: .5),
+              backgroundImage: CachedNetworkImageProvider(widget.chatInfo.image),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.chatInfo.name,
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    _isDeletedFromList ? 'Deleted Chat' : 'Left Chat',
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: _isDeletedFromList ? Colors.red : Colors.orange,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (_leaveReason != null) ...[
+              Text(
+                'Leave Reason:',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              SizedBox(height: 4.h),
+              Text(
+                _leaveReason!,
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color: Colors.grey[600],
+                ),
+              ),
+              SizedBox(height: 16.h),
+            ],
+            Text(
+              _isDeletedFromList 
+                  ? 'This chat has been removed from your list. You can restore it at any time.'
+                  : 'You have left this chat but can still read the messages. Rejoin to participate again.',
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: Colors.grey[700],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('Close'),
+          ),
+          if (_canRejoin)
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _rejoinChat();
+              },
+              icon: Icon(Icons.group_add, size: 18.sp),
+              label: Text(_isDeletedFromList ? 'Restore' : 'Rejoin'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -519,6 +782,7 @@ class _ChatScreenState extends State<ChatScreen>
 
   void _showLeaveOptionsDialog() {
     String selectedOption = 'leave_only'; // Local variable for dialog state
+    String? customReason; // Custom reason input
 
     showDialog(
       context: context,
@@ -533,41 +797,76 @@ class _ChatScreenState extends State<ChatScreen>
                   Text('Leave Chat'),
                 ],
               ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Choose an option:',
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w500,
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Choose an option:',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 16.h),
-                  RadioListTile<String>(
-                    title: Text('Leave Chat Only'),
-                    subtitle: Text('Chat will remain for other members'),
-                    value: 'leave_only',
-                    groupValue: selectedOption,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedOption = value!;
-                      });
-                    },
-                  ),
-                  RadioListTile<String>(
-                    title: Text('Leave and Delete Chat'),
-                    subtitle: Text('Chat will be deleted only for you'),
-                    value: 'leave_and_delete',
-                    groupValue: selectedOption,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedOption = value!;
-                      });
-                    },
-                  ),
-                ],
+                    SizedBox(height: 16.h),
+                    RadioListTile<String>(
+                      title: Text('Leave Chat Only'),
+                      subtitle: Text('You can still read messages but cannot send. Chat remains visible.'),
+                      value: 'leave_only',
+                      groupValue: selectedOption,
+                      onChanged: (value) {
+                        setState(() {
+                          selectedOption = value!;
+                        });
+                      },
+                    ),
+                    RadioListTile<String>(
+                      title: Text('Leave and Delete Chat'),
+                      subtitle: Text('Chat will be completely removed from your list. You can restore it later.'),
+                      value: 'leave_and_delete',
+                      groupValue: selectedOption,
+                      onChanged: (value) {
+                        setState(() {
+                          selectedOption = value!;
+                        });
+                      },
+                    ),
+                    SizedBox(height: 16.h),
+                    Text(
+                      'Reason (optional):',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    TextField(
+                      decoration: InputDecoration(
+                        hintText: 'Why are you leaving?',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12.w,
+                          vertical: 8.h,
+                        ),
+                      ),
+                      maxLines: 2,
+                      onChanged: (value) {
+                        customReason = value.trim().isEmpty ? null : value.trim();
+                      },
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      'This helps us improve the chat experience.',
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
               ),
               actions: [
                 TextButton(
@@ -577,12 +876,14 @@ class _ChatScreenState extends State<ChatScreen>
                   child: Text('Cancel'),
                 ),
                 ElevatedButton(
-                  onPressed: () => _executeLeaveAction(selectedOption),
+                  onPressed: () => _executeLeaveAction(selectedOption, customReason),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
+                    backgroundColor: selectedOption == 'leave_and_delete' 
+                        ? Colors.purple 
+                        : Colors.orange,
                     foregroundColor: Colors.white,
                   ),
-                  child: Text('Leave'),
+                  child: Text(selectedOption == 'leave_and_delete' ? 'Leave & Delete' : 'Leave'),
                 ),
               ],
             );
@@ -592,13 +893,17 @@ class _ChatScreenState extends State<ChatScreen>
     );
   }
 
-  void _executeLeaveAction(String selectedOption) async {
+  void _executeLeaveAction(String selectedOption, [String? customReason]) async {
     if (kDebugMode)
-      print('Executing leave action with option: $selectedOption');
+      print('Executing leave action with option: $selectedOption, reason: $customReason');
 
-    Navigator.of(context).pop(); // Close dialog
+    // Navigator.of(context).pop(); // Close dialog
 
     try {
+      final reason = customReason ?? (selectedOption == 'leave_and_delete' 
+          ? 'User left and deleted chat' 
+          : 'User left the chat');
+
       if (selectedOption == 'leave_and_delete') {
         // Leave and delete - remove chat from list completely
         if (kDebugMode)
@@ -607,13 +912,39 @@ class _ChatScreenState extends State<ChatScreen>
         // Set both leave and delete status to true
         _saveLeaveStatusToStorage(true);
         _saveDeleteStatusToStorage(true);
+        _saveLeaveReasonToStorage(reason);
+
+        if (widget.chatInfo.isTeam) {
+          await cubit.leaveTeamChat(widget.chatInfo.id);
+        } else {
+          await cubit.leaveUserChat(widget.chatInfo.id);
+        }
 
         if (mounted) {
-          context.pop(); // Navigate back to chat list
+          setState(() {
+            _hasLeftChat = true;
+            _isDeletedFromList = true;
+            _canRejoin = true;
+            _leaveReason = reason;
+          });
+          print("111111111111111111");
+          // Close dialog first
+          Navigator.of(context).pop();
+          
+          // Navigate directly to layout screen with Joined Teams tab
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const LayoutScreen(initialIndex: 1),
+            ),
+            (route) => false,
+          );
           AppFunctions.showToast(
             message: 'Chat deleted for you successfully',
             state: ToastStates.success,
           );
+          
+
         }
       } else {
         // Leave only - stay in chat but can't send messages
@@ -629,17 +960,23 @@ class _ChatScreenState extends State<ChatScreen>
         // Update UI to show read-only state
         if (mounted) {
           setState(() {
-            _hasLeftChat = true; // Set leave flag
-            _isDeletedFromList = false; // Set delete flag
+            _hasLeftChat = true;
+            _isDeletedFromList = false;
+            _canRejoin = true;
+            _leaveReason = reason;
           });
 
           // Save leave status to persistent storage
           _saveLeaveStatusToStorage(true);
+          _saveLeaveReasonToStorage(reason);
 
           AppFunctions.showToast(
             message: 'You have left this chat',
             state: ToastStates.success,
           );
+          
+          // Refresh all team lists
+          _refreshAllTeamLists();
         }
       }
     } catch (error) {
@@ -722,10 +1059,14 @@ class _ChatScreenState extends State<ChatScreen>
     leadingWidth: 40.w,
     title: GestureDetector(
       onTap: () {
-        if (widget.chatInfo.isTeam) {
-          _showTeamSettingsScreen();
+        if (_hasLeftChat || _isDeletedFromList) {
+          _showChatInfoDialog();
         } else {
-          _showUserChatSettingsScreen();
+          if (widget.chatInfo.isTeam) {
+            _showTeamSettingsScreen();
+          } else {
+            _showUserChatSettingsScreen();
+          }
         }
       },
       child: Row(
@@ -764,35 +1105,42 @@ class _ChatScreenState extends State<ChatScreen>
       ),
     ),
     actions: [
+      if (!(_hasLeftChat || _isDeletedFromList)) ...[
+        IconButton(
+          onPressed: () {
+            if (widget.chatInfo.isTeam) {
+              _showCallerSelectionDialog(false); // Voice call
+            } else {
+              // For individual chat, call directly
+              _makeCall([
+                {"id": widget.chatInfo.id, "name": widget.chatInfo.name},
+              ], false);
+            }
+          },
+          icon: Icon(IconlyLight.call, size: 22.sp),
+        ),
+        IconButton(
+          onPressed: () {
+            if (widget.chatInfo.isTeam) {
+              _showCallerSelectionDialog(true); // Video call
+            } else {
+              // For individual chat, call directly
+              _makeCall([
+                {"id": widget.chatInfo.id, "name": widget.chatInfo.name},
+              ], true);
+            }
+          },
+          icon: Icon(IconlyLight.video, size: 22.sp),
+        ),
+      ],
       IconButton(
-        onPressed: () {
-          if (widget.chatInfo.isTeam) {
-            _showCallerSelectionDialog(false); // Voice call
-          } else {
-            // For individual chat, call directly
-            _makeCall([
-              {"id": widget.chatInfo.id, "name": widget.chatInfo.name},
-            ], false);
-          }
-        },
-        icon: Icon(IconlyLight.call, size: 22.sp),
-      ),
-      IconButton(
-        onPressed: () {
-          if (widget.chatInfo.isTeam) {
-            _showCallerSelectionDialog(true); // Video call
-          } else {
-            // For individual chat, call directly
-            _makeCall([
-              {"id": widget.chatInfo.id, "name": widget.chatInfo.name},
-            ], true);
-          }
-        },
-        icon: Icon(IconlyLight.video, size: 22.sp),
-      ),
-      IconButton(
-        onPressed: _showLeaveOptionsDialog,
-        icon: Icon(IconlyLight.logout, size: 22.sp),
+        onPressed: _canRejoin ? _rejoinChat : _showLeaveOptionsDialog,
+        icon: Icon(
+          _canRejoin ? IconlyLight.login : IconlyLight.logout,
+          size: 22.sp,
+          color: _canRejoin ? Colors.green : null,
+        ),
+        tooltip: _canRejoin ? 'Rejoin Chat' : 'Leave Chat',
       ),
       SizedBox(width: 5.w),
     ],

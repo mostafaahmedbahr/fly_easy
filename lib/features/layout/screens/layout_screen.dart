@@ -38,7 +38,8 @@ import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'package:uuid/uuid.dart';
 
 class LayoutScreen extends StatefulWidget {
-  const LayoutScreen({Key? key}) : super(key: key);
+  const LayoutScreen({Key? key, required this.initialIndex}) : super(key: key);
+  final int initialIndex;
 
   @override
   State<LayoutScreen> createState() => _LayoutScreenState();
@@ -62,7 +63,10 @@ class _LayoutScreenState extends State<LayoutScreen> with Fcm {
     _initializeFcm();
     _initializeReceivingSharedData();
     _askStoragePermission();
-    _controller = PersistentTabController(initialIndex: 0);
+    // _controller = PersistentTabController(initialIndex: 0);
+    _controller = PersistentTabController(
+      initialIndex: widget.initialIndex,
+    );
   }
 
   @override

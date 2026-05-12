@@ -9,6 +9,7 @@ import 'package:new_fly_easy_new/core/routing/routes.dart';
 
 import '../core/utils/theme.dart';
 import '../features/home/bloc/home_cubit.dart';
+import '../features/teams/bloc/teams_cubit.dart';
 import 'app_bloc/app_cubit.dart';
 
 class MyApp extends StatefulWidget {
@@ -34,6 +35,9 @@ class _MyAppState extends State<MyApp> {
         providers: [
           BlocProvider(
             create: (context) => GlobalAppCubit()..requestContactsPermission(),
+          ),
+          BlocProvider(
+            create: (context) => TeamsCubit(),
           ),
           BlocProvider(
             create: (context) => HomeCubit()..getHomeBanners(), // أضفت HomeCubit هنا

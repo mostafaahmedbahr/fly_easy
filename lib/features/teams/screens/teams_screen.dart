@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -31,6 +32,47 @@ import '../../home/widgets/home_slider_images.dart';
 
 class TeamsScreen extends StatefulWidget {
   const TeamsScreen({Key? key}) : super(key: key);
+
+  // Static method to refresh all team lists from anywhere
+  static void refreshAllTeamLists(BuildContext context) {
+    _refreshTeamListsWithContext(context, 'provided context');
+    
+    // Try alternative approach using global navigator
+    try {
+      final navigatorState = sl<AppRouter>().navigatorKey.currentState;
+      if (navigatorState != null && navigatorState.context.mounted) {
+        _refreshTeamListsWithContext(navigatorState.context, 'global navigator');
+      }
+    } catch (e) {
+      if (kDebugMode) print('Global navigator refresh failed: $e');
+    }
+    
+    // Final fallback - try to get context from current route
+    try {
+      final currentContext = sl<AppRouter>().navigatorKey.currentContext;
+      if (currentContext != null && currentContext.mounted) {
+        _refreshTeamListsWithContext(currentContext, 'current context');
+      }
+    } catch (e) {
+      if (kDebugMode) print('Current context refresh failed: $e');
+    }
+  }
+  
+  // Helper method to refresh team lists with a specific context
+  static void _refreshTeamListsWithContext(BuildContext context, String sourceName) {
+    try {
+      final cubit = context.read<TeamsCubit>();
+      
+      // Use the dedicated refresh method
+      cubit.refreshAllTeamLists();
+      
+      if (kDebugMode) {
+        print('Team lists refreshed successfully via $sourceName');
+      }
+    } catch (e) {
+      if (kDebugMode) print('Team list refresh via $sourceName failed: $e');
+    }
+  }
 
   @override
   State<TeamsScreen> createState() => _TeamsScreenState();
@@ -274,5 +316,6 @@ class _TeamsScreenState extends State<TeamsScreen> with SingleTickerProviderStat
       AppFunctions.showAdvSnackBar(context);
     });
   }
+
   **/
 }

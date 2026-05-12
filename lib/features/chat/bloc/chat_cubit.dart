@@ -111,6 +111,28 @@ class ChatCubit extends Cubit<ChatState> {
     return false;
   }
 
+  // Rejoin team chat method
+  Future<void> rejoinTeamChat(int teamId) async {
+    try {
+      emit(LeaveChatLoad());
+      // Just emit success for now - UI will handle the rejoin state
+      emit(LeaveChatSuccess());
+    } catch (error) {
+      emit(ErrorState(error.toString()));
+    }
+  }
+
+  // Rejoin user chat method
+  Future<void> rejoinUserChat(int userId) async {
+    try {
+      emit(LeaveChatLoad());
+      // Just emit success for now - UI will handle the rejoin state
+      emit(LeaveChatSuccess());
+    } catch (error) {
+      emit(ErrorState(error.toString()));
+    }
+  }
+
   // Create team with proper member management
   Future<void> createTeam({
     required String teamName,

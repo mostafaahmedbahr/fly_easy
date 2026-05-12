@@ -89,3 +89,7 @@ class DuplicateChannelSuccess extends TeamsState {}
 class DuplicateChannelError extends ErrorState {
   DuplicateChannelError(super.error);
 }
+
+class RefreshTeamsLoad extends TeamsState {}
+
+class RefreshTeamsSuccess extends TeamsState {}
