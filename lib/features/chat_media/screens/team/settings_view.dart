@@ -63,13 +63,15 @@ class _SettingsViewState extends State<SettingsView>
                       itemBuilder: (context, index) => GestureDetector(
                         onTap: () {
                           context.push(Routes.chat,
-                              arg: TeamChatInfoModel(
-                                id: cubit.channelDetails!.admin.id,
-                                image: cubit.channelDetails!.admin.image,
-                                name: cubit.channelDetails!.admin.name,
+                              arg: {
+                            "chatInfo" : TeamChatInfoModel(
+                              id: cubit.channelDetails!.admin.id,
+                              image: cubit.channelDetails!.admin.image,
+                              name: cubit.channelDetails!.admin.name,
 
-                                isTeam: false,
-                              ));
+                              isTeam: false,
+                            )
+                              });
                         },
                         child: MemberItem(
                           member: cubit.channelDetails!.admin,
@@ -101,14 +103,14 @@ class _SettingsViewState extends State<SettingsView>
                       itemBuilder: (context, index) => GestureDetector(
                             onTap: () {
                               context.push(Routes.chat,
-                                  arg: TeamChatInfoModel(
-                                    id: cubit.moderators[index].id,
-                                    image: cubit.moderators[index].image,
-                                    name: cubit.moderators[index].name,
-
-
-                                    isTeam: false,
-                                  ));
+                                  arg: {
+                                "chatInfo" : TeamChatInfoModel(
+                                  id: cubit.moderators[index].id,
+                                  image: cubit.moderators[index].image,
+                                  name: cubit.moderators[index].name,
+                                  isTeam: false,
+                                )
+                                  });
                             },
                             child: MemberItem(
                               member: cubit.moderators[index],
@@ -151,14 +153,16 @@ class _SettingsViewState extends State<SettingsView>
                       itemBuilder: (context, index) => GestureDetector(
                           onTap: () {
                             context.push(Routes.chat,
-                                arg: TeamChatInfoModel(
-                                  id: cubit.members[index].id,
-                                  image: cubit.members[index].image,
-                                  name: cubit.members[index].name,
+                                arg: {
+                              "chatInfo" : TeamChatInfoModel(
+                                id: cubit.members[index].id,
+                                image: cubit.members[index].image,
+                                name: cubit.members[index].name,
 
 
-                                  isTeam: false,
-                                ));
+                                isTeam: false,
+                              )
+                                });
                           },
                           child: MemberItem(
                               member: cubit.members[index],

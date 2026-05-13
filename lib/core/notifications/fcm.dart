@@ -30,7 +30,9 @@ Future<void> handleBackGroundMessage(RemoteMessage? message) async {
         userChatId: message.data['chat_user_id'],
         image: message.data['user_logo'], isTeam: false);
   }
-  sl<AppRouter>().navigatorKey.currentState!.pushNamed(Routes.chat,arguments: chatInfo);
+  sl<AppRouter>().navigatorKey.currentState!.pushNamed(Routes.chat,arguments: {
+    "chatInfo" : chatInfo
+  },);
   if (kDebugMode) {
     print(message.data);
   }
@@ -108,18 +110,22 @@ mixin Fcm {
       print(message.messageType);
     }
     if(message.data['type'].toString()=='1'){
-      sl<AppRouter>().navigatorKey.currentState!.pushNamed(Routes.chat,arguments: TeamChatInfoModel(
-          id: message.data['channel_id'],
-          name: message.data['channel_name'],
+      sl<AppRouter>().navigatorKey.currentState!.pushNamed(Routes.chat,arguments: {
+        "chatInfo" : TeamChatInfoModel(
+            id: message.data['channel_id'],
+            name: message.data['channel_name'],
 
-          image: message.data['channel_logo'], isTeam: true));
+            image: message.data['channel_logo'], isTeam: true)
+      });
     }else{
-      sl<AppRouter>().navigatorKey.currentState!.pushNamed(Routes.chat,arguments: TeamChatInfoModel(
-          id: message.data['user_id'],
-          name: message.data['user_name'],
+      sl<AppRouter>().navigatorKey.currentState!.pushNamed(Routes.chat,arguments: {
+        "chatInfo" : TeamChatInfoModel(
+            id: message.data['user_id'],
+            name: message.data['user_name'],
 
-          userChatId: message.data['chat_user_id'],
-          image: message.data['user_logo'], isTeam: false),
+            userChatId: message.data['chat_user_id'],
+            image: message.data['user_logo'], isTeam: false)
+      },
 
       );
     }

@@ -15,12 +15,14 @@ class SearchTeamWidget extends StatelessWidget {
     return ListTile(
       onTap: () {
         context.push(Routes.chat,
-            arg: TeamChatInfoModel(
-              id: team.id,
-              image: team.image,
-              name: team.name,
-              isTeam: true,
-            ));
+            arg: {
+          "chatInfo" : TeamChatInfoModel(
+            id: team.id,
+            image: team.image,
+            name: team.name,
+            isTeam: true,
+          )
+            });
       },
       leading: CircleNetworkImage(imageUrl: team.image, width: 40.w),
       title: Text(

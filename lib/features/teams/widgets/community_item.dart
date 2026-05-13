@@ -160,7 +160,9 @@ class _CommunityWidgetState extends State<CommunityWidget> {
     sl<AppRouter>()
         .navigatorKey
         .currentState!
-        .pushNamed(Routes.chat, arguments: chatInfo);
+        .pushNamed(Routes.chat, arguments: {
+      "chatInfo" : chatInfo
+    });
   }
 
   bool _isModerator() => widget.community.type != UserType.guest.name;

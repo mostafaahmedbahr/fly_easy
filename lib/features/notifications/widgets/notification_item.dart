@@ -85,6 +85,10 @@ class NotificationItem extends StatelessWidget {
         isTeam: true,
       );
     }
-    context.push(Routes.chat, arg: chatInfo);
+    // notification.type == '0' ده معناه انه شات فردي من شخص واحد
+    context.push(Routes.chat, arg: {
+      "chatInfo" : chatInfo,
+      "fromHome" :  notification.type == '0' ? true : false,
+    });
   }
 }

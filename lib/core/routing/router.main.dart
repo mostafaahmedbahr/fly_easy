@@ -68,13 +68,23 @@ class AppRouter {
             settings.arguments as VideoPlayerController;
         return _getPageRoute(VideoFullScreen(videoController: controller));
       case Routes.chat:
-        TeamChatInfoModel chatInfo = settings.arguments as TeamChatInfoModel;
-        return _getPageRoute(BlocProvider(
-          create: (context) => ChatCubit(),
-          child: ChatScreen(
-            chatInfo: chatInfo,
+        final args = settings.arguments as Map<String, dynamic>;
+
+        TeamChatInfoModel chatInfo = args["chatInfo"];
+        bool fromHome = args["fromHome"] ?? false;
+        bool fromNotifications = args["fromNotifications"] ?? false;
+
+
+        return _getPageRoute(
+          BlocProvider(
+            create: (context) => ChatCubit(),
+            child: ChatScreen(
+              chatInfo: chatInfo,
+              fromHome: fromHome,
+              fromNotifications: fromNotifications,
+            ),
           ),
-        ));
+        );
       case Routes.scanQr:
         return _getPageRoute(const ScanScreen());
       case Routes.contacts:

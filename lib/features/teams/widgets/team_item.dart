@@ -173,7 +173,9 @@ class _TeamItemState extends State<TeamItem> {
     sl<AppRouter>()
         .navigatorKey
         .currentState!
-        .pushNamed(Routes.chat, arguments: chatInfo);
+        .pushNamed(Routes.chat, arguments: {
+          "chatInfo" : chatInfo
+    });
     setState(() {
       notificationsNum = 0;
     });

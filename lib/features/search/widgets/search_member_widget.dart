@@ -138,12 +138,14 @@ class _SearchMemberWidgetState extends State<SearchMemberWidget> {
 
   void _goToChat() {
     context.push(Routes.chat,
-        arg: TeamChatInfoModel(
-          id: widget.member.id,
-          image: widget.member.image,
-          name: _displayName, // استخدام الاسم المعروض الجديد
-          isTeam: false,
-        ));
+        arg: {
+      "chatInfo" : TeamChatInfoModel(
+        id: widget.member.id,
+        image: widget.member.image,
+        name: _displayName, // استخدام الاسم المعروض الجديد
+        isTeam: false,
+      )
+        });
   }
 
   void _startShowCase() {

@@ -68,7 +68,9 @@ class SubCommunitiesList extends StatelessWidget {
     sl<AppRouter>()
         .navigatorKey
         .currentState!
-        .pushNamed(Routes.chat, arguments: chatInfo);
+        .pushNamed(Routes.chat, arguments: {
+      "chatInfo" : chatInfo
+    });
   }
 
   void _showAddChannelSheet(BuildContext context,

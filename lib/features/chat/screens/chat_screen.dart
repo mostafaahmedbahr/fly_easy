@@ -31,8 +31,10 @@ import '../bloc/chat_cubit.dart' as chat_state;
 import 'call_screen.dart';
 
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({super.key, required this.chatInfo});
+  const ChatScreen({super.key, required this.chatInfo,   this.fromHome = false , this.fromNotifications = false});
   final TeamChatInfoModel chatInfo;
+  final bool? fromHome;
+  final bool? fromNotifications;
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -1139,6 +1141,7 @@ class _ChatScreenState extends State<ChatScreen>
           icon: Icon(IconlyLight.video, size: 22.sp),
         ),
       ],
+      if(widget.fromHome==false  )
       IconButton(
         onPressed: _canRejoin ? _rejoinChat : _showLeaveOptionsDialog,
         icon: Icon(

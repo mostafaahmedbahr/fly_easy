@@ -183,13 +183,16 @@ class _ChatWidgetState extends State<ChatWidget> {
                           icon: const Icon(IconlyLight.chat),
                           onPressed: () {
                             context.push(Routes.chat,
-                                arg: TeamChatInfoModel(
-                                  id: widget.userChat.userId,
-                                  image: widget.userChat.image,
-                                  name: _displayName, // Use the display name here too
-                                  userChatId: widget.userChat.id,
-                                  isTeam: false,
-                                ));
+                                arg: {
+                                  "chatInfo" : TeamChatInfoModel(
+                                    id: widget.userChat.userId,
+                                    image: widget.userChat.image,
+                                    name: _displayName, // Use the display name here too
+                                    userChatId: widget.userChat.id,
+                                    isTeam: false,
+                                  ),
+                                  "fromHome": true,
+                                });
                             setState(() {
                               notificationsNum = 0;
                             });
