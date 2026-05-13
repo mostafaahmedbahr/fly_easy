@@ -212,6 +212,9 @@ class _OtpScreenState extends State<OtpScreen> {
           missedCall: ZegoCallInvitationMissedCallConfig(
             enabled: true,
               enableDialBack : true,
+            resourceID: 'new_fly_easy_new', // From ZEGOCLOUD Console
+            notificationTitle: () => 'Missed Call',
+            notificationMessage: () => 'You missed a call. Tap to call back.',
           ),
         ),
         invitationEvents: ZegoUIKitPrebuiltCallInvitationEvents(

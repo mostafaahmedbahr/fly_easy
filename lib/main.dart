@@ -238,7 +238,9 @@ Future<void> main() async {
 
         missedCall: ZegoCallInvitationMissedCallConfig(
           enabled: true,
-
+          resourceID: 'new_fly_easy_new', // From ZEGOCLOUD Console
+          notificationTitle: () => 'Missed Call',
+          notificationMessage: () => 'You missed a call. Tap to call back.',
           enableDialBack: true,
         ),
       ),
