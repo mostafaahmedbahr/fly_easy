@@ -2,6 +2,7 @@ import 'package:country_code_picker/country_code_picker.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_pw_validator/flutter_pw_validator.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:new_fly_easy_new/core/routing/routes.dart';
@@ -30,13 +31,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
   ThemeData get themeData => Theme.of(context);
   GlobalKey<FormState> formKey = GlobalKey<FormState>();
   late String email, name, password, phone, countryCode,workId,company;
-
+  late TextEditingController _passwordController;
+  bool isPasswordValid = false;
   @override
   void initState() {
     super.initState();
     countryCode = '+20';
+    _passwordController = TextEditingController();
+
   }
 
+  @override
+  void dispose() {
+    _passwordController.dispose();
+    super.dispose();
+  }
   @override
   Widget build(BuildContext context) {
     return BlocListener<RegisterCubit, RegisterState>(
@@ -147,6 +156,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                           20.h.height,
                           CustomTextField(
+                            controller: _passwordController,
                             hint: LocaleKeys.enter_your_password.tr(),
                             obSecure: true,
                             prefixIcon: const Icon(
@@ -158,31 +168,52 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               password = value!;
                             },
                           ),
+                          10.h.height,
+                          FlutterPwValidator(
+                            controller: _passwordController,
+                            minLength: 8,
+                            uppercaseCharCount: 1,
+                            lowercaseCharCount: 1,
+                            numericCharCount: 1,
+                            specialCharCount: 1,
+                            width: 250.w,
+                            height: 110.h,
+                            onSuccess: () {
+                              setState(() {
+                                isPasswordValid = true;
+                              });
+                            },
+                            onFail: () {
+                              setState(() {
+                                isPasswordValid = false;
+                              });
+                            },
+                          ),
                           25.h.height,
                           BlocBuilder<RegisterCubit, RegisterState>(
                             builder: (context, state) => CustomButton(
-                                onPress: () async {
-                                  if (formKey.currentState!.validate()) {
-                                    formKey.currentState!.save();
-                                    await RegisterCubit.get(context).register(
-                                      email: email,
-                                      name: name,
-                                      password: password,
-                                      phone: phone,
-                                      countryCode: countryCode,
-                                      workId: workId,
-                                      company: company,
-                                    );
-                                  }
-                                },
-                                width: double.infinity,
-                                buttonType: 1,
-                                child: state is RegisterLoading
-                                    ? const MyProgress(
-                                        color: Colors.white,
-                                      )
-                                    : ButtonText(
-                                        title: LocaleKeys.sign_up.tr())),
+                              onPress: isPasswordValid
+                                  ? () async {
+                                if (formKey.currentState!.validate()) {
+                                  formKey.currentState!.save();
+                                  await RegisterCubit.get(context).register(
+                                    email: email,
+                                    name: name,
+                                    password: password,
+                                    phone: phone,
+                                    countryCode: countryCode,
+                                    workId: workId,
+                                    company: company,
+                                  );
+                                }
+                              }
+                                  : (){}, // disabled لو الباسورد مش صالح
+                              width: double.infinity,
+                              buttonType: 1,
+                              child: state is RegisterLoading
+                                  ? const MyProgress(color: Colors.white)
+                                  : ButtonText(title: LocaleKeys.sign_up.tr()),
+                            ),
                           ),
                           10.h.height,
                           Row(
