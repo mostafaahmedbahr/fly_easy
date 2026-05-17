@@ -42,24 +42,44 @@ class _SearchMemberWidgetState extends State<SearchMemberWidget> {
   }
 
   // الحصول على الاسم المعروض - اسم جهة الاتصال أولاً ثم اسم الخلفية بين قوسين
+  // String get _displayName {
+  //   if (widget.contact != null) {
+  //     return "${widget.contact!.displayName}";
+  //    // return "${widget.contact!.displayName} (${widget.member.name})";
+  //   }
+  //   return widget.member.name;
+  // }
+// الحصول على الاسم المعروض
   String get _displayName {
-    if (widget.contact != null) {
-      return "${widget.contact!.displayName}";
-     // return "${widget.contact!.displayName} (${widget.member.name})";
-    }
-    return widget.member.name;
-  }
+    final contactName = widget.contact?.displayName;
 
-  // الحصول على الهاتف المعروض - يفضل جهة الاتصال أولاً
-  String get _displayPhone {
-    if (widget.contact != null &&
-        widget.contact!.phones != null &&
-        widget.contact!.phones!.isNotEmpty) {
-      return widget.contact!.phones!.first.value ?? widget.member.phone;
+    if (contactName != null && contactName.trim().isNotEmpty) {
+      return contactName; // الاسم من الكونتاكت
     }
+
+    return widget.member.name; // الاسم من الباك
+  }
+  // الحصول على الهاتف المعروض - يفضل جهة الاتصال أولاً
+  // String get _displayPhone {
+  //   if (widget.contact != null &&
+  //       widget.contact!.phones != null &&
+  //       widget.contact!.phones!.isNotEmpty) {
+  //     return widget.contact!.phones!.first.value ?? widget.member.phone;
+  //   }
+  //   return widget.member.phone;
+  // }
+  String get _displayPhone {
+    final phones = widget.contact?.phones;
+
+    if (phones != null && phones.isNotEmpty) {
+      final phone = phones.first.value;
+      if (phone != null && phone.isNotEmpty) {
+        return phone;
+      }
+    }
+
     return widget.member.phone;
   }
-
   @override
   Widget build(BuildContext context) {
     return Row(

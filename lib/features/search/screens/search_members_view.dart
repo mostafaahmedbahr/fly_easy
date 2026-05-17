@@ -47,24 +47,30 @@ class _SearchMembersViewState extends State<SearchMembersView>
   }
 
   /// 🧠 تحميل البيانات مع فلترة المستخدمين بناءً على الكونتاكتس
+  // Future<void> _loadFilteredMembers(int pageKey) async {
+  //   await cubit.getAvailableUsers(widget.membersPagingController, pageKey);
+  //
+  //   // فلترة المستخدمين بعد ما السيرفر يرجعهم
+  //   final originalList = widget.membersPagingController.itemList ?? [];
+  //
+  //   final filteredList = originalList.where((member) {
+  //     final contact = PhoneUtils.findContactByPhoneSync(
+  //       member.phone,
+  //       _globalCubit.allContacts,
+  //     );
+  //     return contact != null;
+  //   }).toList();
+  //
+  //   widget.membersPagingController.itemList = filteredList;
+  //   setState(() {});
+  // }
   Future<void> _loadFilteredMembers(int pageKey) async {
     await cubit.getAvailableUsers(widget.membersPagingController, pageKey);
 
-    // فلترة المستخدمين بعد ما السيرفر يرجعهم
-    final originalList = widget.membersPagingController.itemList ?? [];
-
-    final filteredList = originalList.where((member) {
-      final contact = PhoneUtils.findContactByPhoneSync(
-        member.phone,
-        _globalCubit.allContacts,
-      );
-      return contact != null;
-    }).toList();
-
-    widget.membersPagingController.itemList = filteredList;
+    // ❌ امسح الفلترة دي
+    // خليه زي ما هو
     setState(() {});
   }
-
   Future<void> _initializeData() async {
     if (kDebugMode) debugPrint("🔄 بدء تحميل البيانات في البحث...");
 
