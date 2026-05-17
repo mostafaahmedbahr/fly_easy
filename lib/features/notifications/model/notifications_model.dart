@@ -1,22 +1,24 @@
 import 'package:equatable/equatable.dart';
 
 class NotificationModel extends Equatable {
-  final int id;
-  final int userId;
-  final String userImage;
-  final String? userName;
-  final String? chatUserId;
-  final int? teamId;
-  final String? teamImage;
-  final String? teamName;
-  final String message;
-  final String type;
-  final String date;
+  final dynamic id;
+  final dynamic userId;
+  final dynamic userImage;
+  final dynamic userEmail;
+  final dynamic userName;
+  final dynamic chatUserId;
+  final dynamic teamId;
+  final dynamic teamImage;
+  final dynamic teamName;
+  final dynamic message;
+  final dynamic type;
+  final dynamic date;
 
   const NotificationModel({
     required this.id,
     required this.userId,
     required this.userImage,
+    required this.userEmail,
     required this.userName,
     required this.chatUserId,
     required this.teamId,
@@ -33,6 +35,7 @@ class NotificationModel extends Equatable {
         userId: json['from'],
         userImage: json['profile_image'],
         userName: json['username'],
+        userEmail: json['email'],
         chatUserId: json['chat_user_id'],
         teamId: json['channel_id'],
         teamImage: json['channel_image'],
@@ -49,6 +52,7 @@ class NotificationModel extends Equatable {
         message,
         userId,
         userImage,
+        userEmail,
         chatUserId,
         date,
         teamImage,

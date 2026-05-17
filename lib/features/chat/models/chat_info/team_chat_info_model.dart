@@ -5,6 +5,7 @@ class TeamChatInfoModel extends Equatable {
   final String image;
   final String name;
   final String? phone;
+  final String? email;
 
 
   final bool isTeam;
@@ -17,10 +18,11 @@ class TeamChatInfoModel extends Equatable {
     required this.image,
     required this.isTeam,
       this.phone,
+      this.email,
     this.userChatId,
   });
 
   @override
   // TODO: implement props
-  List<Object?> get props => [name, phone , image, id, isTeam,userChatId];
+  List<Object?> get props => [name, phone ,email, image, id, isTeam,userChatId];
 }

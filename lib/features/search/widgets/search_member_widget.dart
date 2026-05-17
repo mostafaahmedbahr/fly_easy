@@ -162,6 +162,7 @@ class _SearchMemberWidgetState extends State<SearchMemberWidget> {
       "chatInfo" : TeamChatInfoModel(
         id: widget.member.id,
         image: widget.member.image,
+        email: widget.member.email,
         name: _displayName, // استخدام الاسم المعروض الجديد
         isTeam: false,
       )

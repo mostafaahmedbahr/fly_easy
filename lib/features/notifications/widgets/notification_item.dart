@@ -72,7 +72,7 @@ class NotificationItem extends StatelessWidget {
         id: notification.userId,
         name: notification.userName!,
         image: notification.userImage,
-
+        email: notification.userEmail,
         userChatId: notification.chatUserId,
         isTeam: false,
         // userChatId: notification.id,

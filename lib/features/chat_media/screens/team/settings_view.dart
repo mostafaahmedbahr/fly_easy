@@ -68,7 +68,7 @@ class _SettingsViewState extends State<SettingsView>
                               id: cubit.channelDetails!.admin.id,
                               image: cubit.channelDetails!.admin.image,
                               name: cubit.channelDetails!.admin.name,
-
+                              email: cubit.channelDetails!.admin.email,
                               isTeam: false,
                             )
                               });
@@ -109,6 +109,7 @@ class _SettingsViewState extends State<SettingsView>
                                   image: cubit.moderators[index].image,
                                   name: cubit.moderators[index].name,
                                   isTeam: false,
+                                  email: cubit.moderators[index].email,
                                 )
                                   });
                             },
@@ -158,6 +159,7 @@ class _SettingsViewState extends State<SettingsView>
                                 id: cubit.members[index].id,
                                 image: cubit.members[index].image,
                                 name: cubit.members[index].name,
+                                email: cubit.members[index].email,
 
 
                                 isTeam: false,

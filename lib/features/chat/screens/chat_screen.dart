@@ -23,6 +23,7 @@ import 'package:new_fly_easy_new/features/chat_media/screens/user/user_chat_sett
 import 'package:new_fly_easy_new/features/teams/screens/teams_screen.dart';
 import 'package:iconly/iconly.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 import '../../../core/routing/routes.dart';
 import '../../../core/utils/colors.dart';
@@ -1113,6 +1114,18 @@ class _ChatScreenState extends State<ChatScreen>
       ),
     ),
     actions: [
+      if(widget.chatInfo.isTeam==false)
+      IconButton(
+        onPressed: () {
+          final Uri emailLaunchUri = Uri(
+            scheme: 'mailto',
+            path: widget.chatInfo.email,
+          );
+          launchUrl(emailLaunchUri);
+
+        },
+        icon: Icon(Icons.email_outlined, size: 22.sp),
+      ),
       if (!(_hasLeftChat || _isDeletedFromList)) ...[
         IconButton(
           onPressed: () {

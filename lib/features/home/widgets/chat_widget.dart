@@ -189,6 +189,7 @@ class _ChatWidgetState extends State<ChatWidget> {
                                     image: widget.userChat.image,
                                     name: _displayName, // Use the display name here too
                                     userChatId: widget.userChat.id,
+                                    email: widget.userChat.email,
                                     isTeam: false,
                                   ),
                                   "fromHome": true,

@@ -20,13 +20,13 @@ Future<void> handleBackGroundMessage(RemoteMessage? message) async {
     chatInfo== TeamChatInfoModel(
         id: message.data['channel_id'],
         name: message.data['channel_name'],
-
+        email: message.data['email'],
         image: message.data['channel_logo'], isTeam: true);
   }else{
     chatInfo= TeamChatInfoModel(
         id: message.data['user_id'],
         name: message.data['user_name'],
-
+        email: message.data['email'],
         userChatId: message.data['chat_user_id'],
         image: message.data['user_logo'], isTeam: false);
   }
@@ -114,7 +114,7 @@ mixin Fcm {
         "chatInfo" : TeamChatInfoModel(
             id: message.data['channel_id'],
             name: message.data['channel_name'],
-
+            email: message.data['email'],
             image: message.data['channel_logo'], isTeam: true)
       });
     }else{
@@ -122,6 +122,7 @@ mixin Fcm {
         "chatInfo" : TeamChatInfoModel(
             id: message.data['user_id'],
             name: message.data['user_name'],
+            email: message.data['email'],
 
             userChatId: message.data['chat_user_id'],
             image: message.data['user_logo'], isTeam: false)
