@@ -10,6 +10,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:new_fly_easy_new/core/cache/cache_helper.dart';
 import 'package:new_fly_easy_new/core/download_manager/download_manager.dart';
 import 'package:new_fly_easy_new/core/hive/hive_utils.dart';
 import 'package:new_fly_easy_new/core/injection/di_container.dart';
@@ -1202,5 +1203,49 @@ class ChatCubit extends Cubit<ChatState> {
     } catch (error) {
       rethrow;
     }
+  }
+
+  // Block user functionality
+  Future<void> blockUser(int userIdToBlock) async {
+    try {
+      emit(BlockUserLoad());
+      final response = await DioHelper.postData(
+        path: EndPoints.blockUser,
+        data: {'user_id': userIdToBlock},
+      );
+      if (response.statusCode == 200) {
+        // Save block status to local cache
+        final blockKey = 'blocked_user_$userIdToBlock';
+        await CacheHelper.putData(key: blockKey, value: true);
+        emit(BlockUserSuccess(userIdToBlock));
+      }
+    } catch (error) {
+      emit(BlockUserError(sl<ErrorModel>().getErrorMessage(error)));
+    }
+  }
+
+  // Unblock user functionality
+  Future<void> unblockUser(int userIdToUnblock) async {
+    try {
+      emit(UnblockUserLoad());
+      final response = await DioHelper.postData(
+        path: EndPoints.unblockUser,
+        data: {'user_id': userIdToUnblock},
+      );
+      if (response.statusCode == 200) {
+        // Remove block status from local cache
+        final blockKey = 'blocked_user_$userIdToUnblock';
+        await CacheHelper.removeValue(key: blockKey);
+        emit(UnblockUserSuccess(userIdToUnblock));
+      }
+    } catch (error) {
+      emit(UnblockUserError(sl<ErrorModel>().getErrorMessage(error)));
+    }
+  }
+
+  // Check if user is blocked
+  bool isUserBlocked(int userIdToCheck) {
+    final blockKey = 'blocked_user_$userIdToCheck';
+    return CacheHelper.getData(key: blockKey) ?? false;
   }
 }

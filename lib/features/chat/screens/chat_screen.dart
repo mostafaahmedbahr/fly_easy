@@ -32,7 +32,12 @@ import '../bloc/chat_cubit.dart' as chat_state;
 import 'call_screen.dart';
 
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({super.key, required this.chatInfo,   this.fromHome = false , this.fromNotifications = false});
+  const ChatScreen({
+    super.key,
+    required this.chatInfo,
+    this.fromHome = false,
+    this.fromNotifications = false,
+  });
   final TeamChatInfoModel chatInfo;
   final bool? fromHome;
   final bool? fromNotifications;
@@ -104,7 +109,8 @@ class _ChatScreenState extends State<ChatScreen>
       setState(() {
         _hasLeftChat = hasLeft;
         _isDeletedFromList = isDeleted;
-        _canRejoin = hasLeft || isDeleted; // User can rejoin if they left or deleted
+        _canRejoin =
+            hasLeft || isDeleted; // User can rejoin if they left or deleted
         _leaveReason = reason;
       });
     }
@@ -126,7 +132,6 @@ class _ChatScreenState extends State<ChatScreen>
         : 'deleted_chat_${widget.chatInfo.id}';
 
     CacheHelper.putData(key: deleteKey, value: isDeleted);
-
   }
 
   // Save leave reason to persistent storage
@@ -196,7 +201,7 @@ class _ChatScreenState extends State<ChatScreen>
     try {
       // Use the static method from TeamsScreen
       TeamsScreen.refreshAllTeamLists(context);
-      
+
       // Also try direct refresh as backup
       try {
         context.read<TeamsCubit>().adminTeamsPagingController.refresh();
@@ -205,7 +210,6 @@ class _ChatScreenState extends State<ChatScreen>
       } catch (e) {
         if (kDebugMode) print('Direct refresh failed: $e');
       }
-
     } catch (e) {
       if (kDebugMode) print('Error refreshing team lists: $e');
     }
@@ -222,24 +226,21 @@ class _ChatScreenState extends State<ChatScreen>
       _saveDeleteStatusToStorage(true);
 
       if (mounted) {
-
         Future.microtask(() {
-
           if (!mounted) return;
 
           Navigator.pushNamedAndRemoveUntil(
             context,
             Routes.layout,
-                (route) => false,
+            (route) => false,
             arguments: 1,
           );
-
         });
         AppFunctions.showToast(
           message: 'Chat removed from your list successfully',
           state: ToastStates.success,
         );
-        
+
         // Refresh all team lists
         _refreshAllTeamLists();
       }
@@ -284,7 +285,11 @@ class _ChatScreenState extends State<ChatScreen>
             current is chat_state.GetPositionLoad ||
             current is chat_state.GetPositionSuccess ||
             current is chat_state.LeaveChatLoad ||
-            current is chat_state.LeaveChatSuccess,
+            current is chat_state.LeaveChatSuccess ||
+            current is chat_state.BlockUserLoad ||
+            current is chat_state.BlockUserSuccess ||
+            current is chat_state.UnblockUserLoad ||
+            current is chat_state.UnblockUserSuccess,
         listener: _blocListener,
         child: Scaffold(
           backgroundColor: theme.cardColor,
@@ -298,11 +303,12 @@ class _ChatScreenState extends State<ChatScreen>
                   padding: EdgeInsets.all(16.w),
                   margin: EdgeInsets.all(16.w),
                   decoration: BoxDecoration(
-                    color: _isDeletedFromList 
+                    color: _isDeletedFromList
                         ? Colors.red.withValues(alpha: 0.1)
                         : Colors.orange.withValues(alpha: 0.1),
                     border: Border.all(
-                        color: _isDeletedFromList ? Colors.red : Colors.orange),
+                      color: _isDeletedFromList ? Colors.red : Colors.orange,
+                    ),
                     borderRadius: BorderRadius.circular(12.r),
                   ),
                   child: Column(
@@ -311,8 +317,12 @@ class _ChatScreenState extends State<ChatScreen>
                       Row(
                         children: [
                           Icon(
-                            _isDeletedFromList ? Icons.delete_forever : Icons.info_outline,
-                            color: _isDeletedFromList ? Colors.red : Colors.orange,
+                            _isDeletedFromList
+                                ? Icons.delete_forever
+                                : Icons.info_outline,
+                            color: _isDeletedFromList
+                                ? Colors.red
+                                : Colors.orange,
                             size: 24.sp,
                           ),
                           SizedBox(width: 12.w),
@@ -321,16 +331,20 @@ class _ChatScreenState extends State<ChatScreen>
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  _isDeletedFromList ? 'Chat deleted for you' : 'You have left this chat',
+                                  _isDeletedFromList
+                                      ? 'Chat deleted for you'
+                                      : 'You have left this chat',
                                   style: TextStyle(
                                     fontSize: 16.sp,
                                     fontWeight: FontWeight.bold,
-                                    color: _isDeletedFromList ? Colors.red : Colors.orange,
+                                    color: _isDeletedFromList
+                                        ? Colors.red
+                                        : Colors.orange,
                                   ),
                                 ),
                                 SizedBox(height: 4.h),
                                 Text(
-                                  _isDeletedFromList 
+                                  _isDeletedFromList
                                       ? 'This chat has been removed from your list. You can restore it if you change your mind.'
                                       : 'You can only read messages. To participate again, you need to rejoin this chat.',
                                   style: TextStyle(
@@ -362,7 +376,11 @@ class _ChatScreenState extends State<ChatScreen>
                             child: ElevatedButton.icon(
                               onPressed: _rejoinChat,
                               icon: Icon(Icons.group_add, size: 18.sp),
-                              label: Text(_isDeletedFromList ? 'Restore Chat' : 'Rejoin Chat'),
+                              label: Text(
+                                _isDeletedFromList
+                                    ? 'Restore Chat'
+                                    : 'Rejoin Chat',
+                              ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.green,
                                 foregroundColor: Colors.white,
@@ -405,12 +423,12 @@ class _ChatScreenState extends State<ChatScreen>
                 Container(
                   padding: EdgeInsets.all(16.w),
                   decoration: BoxDecoration(
-                    color: _isDeletedFromList 
+                    color: _isDeletedFromList
                         ? Colors.red.withValues(alpha: 0.1)
                         : Colors.grey.withValues(alpha: 0.1),
                     border: Border(
                       top: BorderSide(
-                        color: _isDeletedFromList 
+                        color: _isDeletedFromList
                             ? Colors.red.withValues(alpha: 0.3)
                             : Colors.grey.withValues(alpha: 0.3),
                       ),
@@ -426,12 +444,14 @@ class _ChatScreenState extends State<ChatScreen>
                       SizedBox(width: 8.w),
                       Expanded(
                         child: Text(
-                          _isDeletedFromList 
+                          _isDeletedFromList
                               ? 'Chat deleted - Rejoin to send messages'
                               : 'You cannot send messages in this chat',
                           style: TextStyle(
                             fontSize: 14.sp,
-                            color: _isDeletedFromList ? Colors.red : Colors.grey,
+                            color: _isDeletedFromList
+                                ? Colors.red
+                                : Colors.grey,
                             fontStyle: FontStyle.italic,
                           ),
                         ),
@@ -539,7 +559,9 @@ class _ChatScreenState extends State<ChatScreen>
             CircleAvatar(
               radius: 20.w,
               backgroundColor: Colors.grey.withValues(alpha: .5),
-              backgroundImage: CachedNetworkImageProvider(widget.chatInfo.image),
+              backgroundImage: CachedNetworkImageProvider(
+                widget.chatInfo.image,
+              ),
             ),
             SizedBox(width: 12.w),
             Expanded(
@@ -572,29 +594,20 @@ class _ChatScreenState extends State<ChatScreen>
             if (_leaveReason != null) ...[
               Text(
                 'Leave Reason:',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500),
               ),
               SizedBox(height: 4.h),
               Text(
                 _leaveReason!,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
               ),
               SizedBox(height: 16.h),
             ],
             Text(
-              _isDeletedFromList 
+              _isDeletedFromList
                   ? 'This chat has been removed from your list. You can restore it at any time.'
                   : 'You have left this chat but can still read the messages. Rejoin to participate again.',
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: Colors.grey[700],
-              ),
+              style: TextStyle(fontSize: 14.sp, color: Colors.grey[700]),
             ),
           ],
         ),
@@ -801,13 +814,15 @@ class _ChatScreenState extends State<ChatScreen>
                       style: TextStyle(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w500,
-                        color: AppColors.lightPrimaryColor
+                        color: AppColors.lightPrimaryColor,
                       ),
                     ),
                     SizedBox(height: 16.h),
                     RadioListTile<String>(
                       title: Text('Leave Chat Only'),
-                      subtitle: Text('You can still read messages but cannot send. Chat remains visible.'),
+                      subtitle: Text(
+                        'You can still read messages but cannot send. Chat remains visible.',
+                      ),
                       value: 'leave_only',
                       groupValue: selectedOption,
                       activeColor: AppColors.lightPrimaryColor,
@@ -819,7 +834,9 @@ class _ChatScreenState extends State<ChatScreen>
                     ),
                     RadioListTile<String>(
                       title: Text('Leave and Delete Chat'),
-                      subtitle: Text('Chat will be completely removed from your list. You can restore it later.'),
+                      subtitle: Text(
+                        'Chat will be completely removed from your list. You can restore it later.',
+                      ),
                       value: 'leave_and_delete',
                       groupValue: selectedOption,
                       activeColor: AppColors.lightPrimaryColor,
@@ -870,21 +887,24 @@ class _ChatScreenState extends State<ChatScreen>
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
-                  child: Text('Cancel',style: TextStyle(
-                    color: Colors.black
-                  ),),
+                  child: Text('Cancel', style: TextStyle(color: Colors.black)),
                 ),
                 ElevatedButton(
-                  onPressed: () => _executeLeaveAction(selectedOption, customReason),
+                  onPressed: () =>
+                      _executeLeaveAction(selectedOption, customReason),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: selectedOption == 'leave_and_delete' 
-                        ?    AppColors.lightPrimaryColor
-                        :  Colors.black,
+                    backgroundColor: selectedOption == 'leave_and_delete'
+                        ? AppColors.lightPrimaryColor
+                        : Colors.black,
                     foregroundColor: Colors.white,
                   ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Text(selectedOption == 'leave_and_delete' ? 'Leave & Delete' : 'Leave'),
+                    child: Text(
+                      selectedOption == 'leave_and_delete'
+                          ? 'Leave & Delete'
+                          : 'Leave',
+                    ),
                   ),
                 ),
               ],
@@ -895,17 +915,24 @@ class _ChatScreenState extends State<ChatScreen>
     );
   }
 
-  void _executeLeaveAction(String selectedOption, [String? customReason]) async {
+  void _executeLeaveAction(
+    String selectedOption, [
+    String? customReason,
+  ]) async {
     if (kDebugMode) {
-      print('Executing leave action with option: $selectedOption, reason: $customReason');
+      print(
+        'Executing leave action with option: $selectedOption, reason: $customReason',
+      );
     }
 
     // Navigator.of(context).pop(); // Close dialog
 
     try {
-      final reason = customReason ?? (selectedOption == 'leave_and_delete' 
-          ? 'User left and deleted chat' 
-          : 'User left the chat');
+      final reason =
+          customReason ??
+          (selectedOption == 'leave_and_delete'
+              ? 'User left and deleted chat'
+              : 'User left the chat');
 
       if (selectedOption == 'leave_and_delete') {
         // Leave and delete - remove chat from list completely
@@ -936,23 +963,19 @@ class _ChatScreenState extends State<ChatScreen>
           Navigator.pop(context);
 
           Future.microtask(() {
-
             if (!mounted) return;
 
             Navigator.pushNamedAndRemoveUntil(
               context,
               Routes.layout,
-                  (route) => false,
+              (route) => false,
               arguments: 1,
             );
-
           });
           AppFunctions.showToast(
             message: 'Chat deleted for you successfully',
             state: ToastStates.success,
           );
-          
-
         }
       } else {
         // Leave only - stay in chat but can't send messages
@@ -983,7 +1006,7 @@ class _ChatScreenState extends State<ChatScreen>
             message: 'You have left this chat',
             state: ToastStates.success,
           );
-          
+
           // Refresh all team lists
           _refreshAllTeamLists();
         }
@@ -1045,6 +1068,32 @@ class _ChatScreenState extends State<ChatScreen>
     } else if (state is chat_state.LeaveChatSuccess) {
       Navigator.of(context, rootNavigator: true).pop();
       // Navigation back is handled in _executeLeaveAction
+    } else if (state is chat_state.BlockUserLoad) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const DialogIndicator(),
+      );
+    } else if (state is chat_state.BlockUserSuccess) {
+      Navigator.of(context, rootNavigator: true).pop();
+      setState(() {}); // Update UI to show blocked status
+      AppFunctions.showToast(
+        message: 'User blocked successfully',
+        state: ToastStates.success,
+      );
+    } else if (state is chat_state.UnblockUserLoad) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const DialogIndicator(),
+      );
+    } else if (state is chat_state.UnblockUserSuccess) {
+      Navigator.of(context, rootNavigator: true).pop();
+      setState(() {}); // Update UI to show unblocked status
+      AppFunctions.showToast(
+        message: 'User unblocked successfully',
+        state: ToastStates.success,
+      );
     } else if (state is chat_state.ErrorState) {
       Navigator.of(context, rootNavigator: true).pop();
       AppFunctions.showToast(message: state.error, state: ToastStates.error);
@@ -1114,18 +1163,17 @@ class _ChatScreenState extends State<ChatScreen>
       ),
     ),
     actions: [
-      if(widget.chatInfo.isTeam==false)
-      IconButton(
-        onPressed: () {
-          final Uri emailLaunchUri = Uri(
-            scheme: 'mailto',
-            path: widget.chatInfo.email,
-          );
-          launchUrl(emailLaunchUri);
-
-        },
-        icon: Icon(Icons.email_outlined, size: 22.sp),
-      ),
+      if (widget.chatInfo.isTeam == false)
+        IconButton(
+          onPressed: () {
+            final Uri emailLaunchUri = Uri(
+              scheme: 'mailto',
+              path: widget.chatInfo.email,
+            );
+            launchUrl(emailLaunchUri);
+          },
+          icon: Icon(Icons.email_outlined, size: 22.sp),
+        ),
       if (!(_hasLeftChat || _isDeletedFromList)) ...[
         IconButton(
           onPressed: () {
@@ -1154,17 +1202,83 @@ class _ChatScreenState extends State<ChatScreen>
           icon: Icon(IconlyLight.video, size: 22.sp),
         ),
       ],
-      if(widget.fromHome==false  )
-      IconButton(
-        onPressed: _canRejoin ? _rejoinChat : _showLeaveOptionsDialog,
-        icon: Icon(
-          _canRejoin ? IconlyLight.login : IconlyLight.logout,
-          size: 22.sp,
-          color: _canRejoin ? Colors.green : null,
+      if (widget.fromHome == false)
+        IconButton(
+          onPressed: _canRejoin ? _rejoinChat : _showLeaveOptionsDialog,
+          icon: Icon(
+            _canRejoin ? IconlyLight.login : IconlyLight.logout,
+            size: 22.sp,
+            color: _canRejoin ? Colors.green : null,
+          ),
+          tooltip: _canRejoin ? 'Rejoin Chat' : 'Leave Chat',
         ),
-        tooltip: _canRejoin ? 'Rejoin Chat' : 'Leave Chat',
-      ),
+      // Block/Unblock button for individual chats
+      if (!widget.chatInfo.isTeam && !(_hasLeftChat || _isDeletedFromList))
+        IconButton(
+          onPressed: _showBlockUnblockDialog,
+          icon: Icon(
+            cubit.isUserBlocked(widget.chatInfo.id)
+                ? IconlyLight.unlock
+                : IconlyLight.danger,
+            size: 22.sp,
+            color: cubit.isUserBlocked(widget.chatInfo.id)
+                ? Colors.green
+                : Colors.red,
+          ),
+          tooltip: cubit.isUserBlocked(widget.chatInfo.id)
+              ? 'Unblock User'
+              : 'Block User',
+        ),
       SizedBox(width: 5.w),
     ],
   );
+
+  // Show block/unblock dialog
+  void _showBlockUnblockDialog() {
+    final isBlocked = cubit.isUserBlocked(widget.chatInfo.id);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(
+              isBlocked ? Icons.lock_open : Icons.block,
+              color: isBlocked ? Colors.green : Colors.red,
+              size: 24,
+            ),
+            SizedBox(width: 10),
+            Text(isBlocked ? 'Unblock User' : 'Block User'),
+          ],
+        ),
+        content: Text(
+          isBlocked
+              ? 'Are you sure you want to unblock ${widget.chatInfo.name}? They will be able to send you messages again.'
+              : 'Are you sure you want to block ${widget.chatInfo.name}? You won\'t receive messages from them anymore.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              if (isBlocked) {
+                cubit.unblockUser(widget.chatInfo.id);
+              } else {
+                cubit.blockUser(widget.chatInfo.id);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isBlocked ? Colors.green : Colors.red,
+            ),
+            child: Text(
+              isBlocked ? 'Unblock' : 'Block',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

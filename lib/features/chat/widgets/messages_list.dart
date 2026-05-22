@@ -10,7 +10,7 @@ import 'package:new_fly_easy_new/features/chat/widgets/other_message.dart';
 
 class MessagesList extends StatefulWidget {
   const MessagesList({Key? key, required this.scrollController})
-      : super(key: key);
+    : super(key: key);
   final ScrollController scrollController;
 
   @override
@@ -34,57 +34,63 @@ class _MessagesListState extends State<MessagesList> {
           current is PickFileSuccess ||
           current is SaveRecordSuccess,
       builder: (context, state) => state is GetMessagesLoad
-          ? const Center(
-              child: MyProgress(),
-            )
+          ? const Center(child: MyProgress())
           : cubit.messages.isNotEmpty
-              ? Column(
-                  children: [
-                    state is LoadMore
-                        ? Container(
-                            margin: EdgeInsets.only(top: 10.h),
-                            height: 20,
-                            width: 20,
-                            child: const MyProgress(),
-                          )
-                        : const SizedBox.shrink(),
-                    Expanded(
-                      child: ListView.custom(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        childrenDelegate: SliverChildBuilderDelegate(
-                          addAutomaticKeepAlives: true,
-                          findChildIndexCallback: (key) {
-                            final ValueKey<String> valueKey =
-                                key as ValueKey<String>;
-                            return cubit.messages.indexWhere(
-                                (MessageModel message) =>
-                                    message.virtualId == valueKey.value);
-                          },
-                          childCount: cubit.messages.length,
-                          (context, index) =>
-                              _isMyMessage(cubit.messages[index])
-                                  ? MyMessage(
-                                      key: ValueKey<String>(
-                                          cubit.messages[index].virtualId),
-                                      isNewDate: _isNewDate(index),
-                                      message: cubit.messages[index])
-                                  : OtherMessage(
-                                      key: ValueKey<String>(
-                                          cubit.messages[index].virtualId),
-                                      message: cubit.messages[index],
-                                      isNewDate: _isNewDate(index),
-                                      isSameAsPrev: _isSameAsPrev(index)),
-                        ),
-                        reverse: true,
-                        controller: widget.scrollController,
-                      ),
+          ? Column(
+              children: [
+                state is LoadMore
+                    ? Container(
+                        margin: EdgeInsets.only(top: 10.h),
+                        height: 20,
+                        width: 20,
+                        child: const MyProgress(),
+                      )
+                    : const SizedBox.shrink(),
+                Expanded(
+                  child: ListView.custom(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    childrenDelegate: SliverChildBuilderDelegate(
+                      addAutomaticKeepAlives: true,
+                      findChildIndexCallback: (key) {
+                        final ValueKey<String> valueKey =
+                            key as ValueKey<String>;
+                        return cubit.messages.indexWhere(
+                          (MessageModel message) =>
+                              message.virtualId == valueKey.value,
+                        );
+                      },
+                      childCount: cubit.messages.length,
+                      (context, index) {
+                        final message = cubit.messages[index];
+                        // Filter out messages from blocked users (except my own messages)
+                        if (!_isMyMessage(message) &&
+                            message.senderId != null &&
+                            cubit.isUserBlocked(message.senderId!)) {
+                          return const SizedBox.shrink();
+                        }
+                        return _isMyMessage(message)
+                            ? MyMessage(
+                                key: ValueKey<String>(message.virtualId),
+                                isNewDate: _isNewDate(index),
+                                message: message,
+                              )
+                            : OtherMessage(
+                                key: ValueKey<String>(message.virtualId),
+                                message: message,
+                                isNewDate: _isNewDate(index),
+                                isSameAsPrev: _isSameAsPrev(index),
+                              );
+                      },
                     ),
-                  ],
-                )
-              : const SizedBox.shrink(),
+                    reverse: true,
+                    controller: widget.scrollController,
+                  ),
+                ),
+              ],
+            )
+          : const SizedBox.shrink(),
     );
   }
-
 
   bool _isMyMessage(MessageModel message) =>
       message.senderId == HiveUtils.getUserData()!.id;
@@ -113,5 +119,4 @@ class _MessagesListState extends State<MessagesList> {
           cubit.messages[index + 1].senderId);
     }
   }
-
 }

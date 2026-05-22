@@ -116,3 +116,27 @@ class ShowLocationReasonMessage extends ChatState {}
 class LeaveChatLoad extends ChatState {}
 
 class LeaveChatSuccess extends ChatState {}
+
+class BlockUserLoad extends ChatState {}
+
+class BlockUserSuccess extends ChatState {
+  final int userId;
+  BlockUserSuccess(this.userId);
+}
+
+class BlockUserError extends ChatState {
+  final String error;
+  BlockUserError(this.error);
+}
+
+class UnblockUserLoad extends ChatState {}
+
+class UnblockUserSuccess extends ChatState {
+  final int userId;
+  UnblockUserSuccess(this.userId);
+}
+
+class UnblockUserError extends ChatState {
+  final String error;
+  UnblockUserError(this.error);
+}

@@ -1,6 +1,6 @@
 abstract class EndPoints {
   // static const baseUrl='https://flyeasy.io/api/v1/';
-  static const baseUrl='https://flyeasy.wwdigi.it/api/v1/';
+  static const baseUrl = 'https://flyeasy.wwdigi.it/api/v1/';
 
   static const login = 'login';
   static const register = 'register';
@@ -30,7 +30,7 @@ abstract class EndPoints {
   static const updateUserImage = 'profile/image/update';
   static const updateUserPassword = 'profile/password/update';
   static const logout = 'profile/logout';
-  static const deleteAccount='deleteaccount';
+  static const deleteAccount = 'deleteaccount';
 
   static const myContacts = 'channels/members';
   static const allTeams = 'channels/authenticateJoined';
@@ -51,6 +51,8 @@ abstract class EndPoints {
   static const notificationsCount = 'notification/notificationCounter';
   static const resetNotificationsCount = 'notification/resetnotification';
 
-
   static const homeBanners = 'home-banners';
+
+  static const blockUser = 'users/block';
+  static const unblockUser = 'users/unblock';
 }
