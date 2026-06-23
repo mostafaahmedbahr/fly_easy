@@ -6,6 +6,7 @@ class CommunityModel extends Equatable {
   final String image;
   final bool? isJoined;
   final String? type;
+  final int notificationsCount;
   final List<CommunityModel> subChannels;
 
   const CommunityModel({
@@ -15,6 +16,7 @@ class CommunityModel extends Equatable {
     required this.subChannels,
     required this.type,
     required this.isJoined,
+    this.notificationsCount = 0,
   });
 
   factory CommunityModel.fromJson(Map<String, dynamic> json) {
@@ -32,16 +34,11 @@ class CommunityModel extends Equatable {
       image: json['logo'],
       type: json['group'],
       isJoined: json['is_joined'] != 'no',
-      // subChannels: json['sub_communities'] != null &&
-      //         json['sub_communities'].isNotEmpty
-      //     ? List<CommunityModel>.from(
-      //         json['sub_communities'].map((e) => CommunityModel.fromJson(e)))
-      //     : []
+      notificationsCount: json['notify_counter'] ?? 0,
       subChannels: subSubList,
     );
   }
 
   @override
-  // TODO: implement props
-  List<Object?> get props => [name, image, subChannels, isJoined, type];
+  List<Object?> get props => [name, image, subChannels, isJoined, type, notificationsCount];
 }

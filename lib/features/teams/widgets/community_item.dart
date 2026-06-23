@@ -1,7 +1,9 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:new_fly_easy_new/app/app_bloc/app_cubit.dart';
 import 'package:new_fly_easy_new/core/cache/cahce_utils.dart';
 import 'package:new_fly_easy_new/core/hive/hive_utils.dart';
 import 'package:new_fly_easy_new/core/injection/di_container.dart';
@@ -39,16 +41,53 @@ class CommunityWidget extends StatefulWidget {
 
 class _CommunityWidgetState extends State<CommunityWidget> {
   TeamsCubit get cubit => context.read<TeamsCubit>();
+  int notificationsNum = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    notificationsNum = widget.community.notificationsCount;
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ExpansionTile(
+    return BlocListener<GlobalAppCubit, GlobalAppState>(
+      listenWhen: (previous, current) =>
+          (current is ReceiveTeamNotification &&
+              current.teamId.toString() == widget.community.id.toString()) ||
+          (current is ClearTeamChatNotifications &&
+              current.teamId.toString() == widget.community.id.toString()),
+      listener: (context, state) {
+        if (state is ReceiveTeamNotification) {
+          setState(() => notificationsNum++);
+        } else if (state is ClearTeamChatNotifications) {
+          setState(() => notificationsNum = 0);
+        }
+      },
+      child: ExpansionTile(
         tilePadding: EdgeInsets.zero,
         expandedCrossAxisAlignment: CrossAxisAlignment.start,
         shape: Border.all(style: BorderStyle.none, color: Colors.transparent),
         expandedAlignment: Alignment.centerLeft,
-        leading:
+        leading: Stack(
+          children: [
             CustomNetworkImage(width: 25.w, imageUrl: widget.community.image),
+            if (notificationsNum > 0)
+              Positioned(
+                top: -2,
+                right: -2,
+                child: CircleAvatar(
+                  backgroundColor: Colors.red,
+                  radius: 7,
+                  child: Text(
+                    notificationsNum > 99 ? '+99' : '$notificationsNum',
+                    style: const TextStyle(
+                        color: Colors.white, fontSize: 8, fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ),
+          ],
+        ),
         iconColor: CacheUtils.isDarkMode()
             ? AppColors.lightSecondaryColor
             : Colors.black,
@@ -73,9 +112,16 @@ class _CommunityWidgetState extends State<CommunityWidget> {
                   );
                 }
               },
-              child: Text(
-                widget.community.name,
-                style: Theme.of(context).textTheme.bodyMedium,
+              child: Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      widget.community.name,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
               ),
             )),
             Visibility(
@@ -129,7 +175,8 @@ class _CommunityWidgetState extends State<CommunityWidget> {
               teamId: widget.teamId,
               communityId: widget.community.id,
               subCommunities: widget.community.subChannels)
-        ]);
+        ]),
+    );
   }
 
   /// ///////////// Helper Methods ///////////////////
