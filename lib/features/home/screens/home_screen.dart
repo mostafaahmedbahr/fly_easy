@@ -30,7 +30,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   HomeCubit get cubit => HomeCubit.get(context);
 
   final PagingController<int, UserChatModel> _chatsPagingController =
@@ -45,6 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     //  _initializeShowHints();
     if (kDebugMode) {
       print('🏠 Home Screen: Initializing notifications count...');
@@ -155,7 +156,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      cubit.getNotificationsCount();
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _chatsPagingController.dispose();
     super.dispose();
   }
@@ -188,9 +197,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 listener: (context, state) {
                   if (state is ReceiveTeamNotification ||
                       state is ReceiveUserNotification) {
-                    //  _notificationsNum++;
-                    cubit.notificationsCount++;
-                    setState(() {}); // Trigger UI update
+                    cubit.increaseNotifications();
                   }
                 },
                 buildWhen: (previous, current) =>
@@ -253,9 +260,11 @@ class _HomeScreenState extends State<HomeScreen> {
   /// ////////////// Helper Methods ////////////////////
   /// //////////////////////////////////////////////////
 
-  void _onNotificationsPressed() {
+  void _onNotificationsPressed() async {
     _resetNotifications();
-    context.push(Routes.notifications);
+    await context.push(Routes.notifications);
+    if (!mounted) return;
+    cubit.getNotificationsCount();
   }
 
   void _onSearchPressed() {

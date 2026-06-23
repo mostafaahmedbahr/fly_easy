@@ -78,7 +78,7 @@ class TeamsScreen extends StatefulWidget {
   State<TeamsScreen> createState() => _TeamsScreenState();
 }
 
-class _TeamsScreenState extends State<TeamsScreen> with SingleTickerProviderStateMixin {
+class _TeamsScreenState extends State<TeamsScreen> with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   TeamsCubit get cubit => context.read<TeamsCubit>();
   late TabController _tabController;
   late PagingController<int, TeamModel> _joinedTeamsPagingController;
@@ -90,10 +90,12 @@ class _TeamsScreenState extends State<TeamsScreen> with SingleTickerProviderStat
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _tabController = TabController(length: 3, vsync: this);
     _joinedTeamsPagingController = cubit.joinedTeamsPagingController;
     _adminTeamsPagingController = cubit.adminTeamsPagingController;
     _archivedTeamsPagingController = cubit.archivedTeamsPagingController;
+    Future.microtask(() => context.read<HomeCubit>().getNotificationsCount());
    // _startShowCase();
     // _showAdvSnackBar();
     // _createInterstitialAd();
@@ -136,7 +138,15 @@ class _TeamsScreenState extends State<TeamsScreen> with SingleTickerProviderStat
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      context.read<HomeCubit>().getNotificationsCount();
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _joinedTeamsPagingController.dispose();
     _adminTeamsPagingController.dispose();
     _archivedTeamsPagingController.dispose();
@@ -172,9 +182,7 @@ class _TeamsScreenState extends State<TeamsScreen> with SingleTickerProviderStat
                     listener: (context, state) {
                       if (state is ReceiveTeamNotification ||
                           state is ReceiveUserNotification) {
-                        //  _notificationsNum++;
-                        context.read<HomeCubit>().notificationsCount++;
-                        setState(() {}); // Trigger UI update
+                        context.read<HomeCubit>().increaseNotifications();
                       }
                     },
                     buildWhen: (previous, current) =>
@@ -231,9 +239,11 @@ class _TeamsScreenState extends State<TeamsScreen> with SingleTickerProviderStat
         ),
         centerTitle: true,
       );
-  void _onNotificationsPressed() {
+  void _onNotificationsPressed() async {
     _resetNotifications();
-    context.push(Routes.notifications);
+    await context.push(Routes.notifications);
+    if (!mounted) return;
+    context.read<HomeCubit>().getNotificationsCount();
   }
   void _resetNotifications() {
     context.read<HomeCubit>().resetNotificationsCounter();

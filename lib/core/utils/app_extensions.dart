@@ -13,11 +13,11 @@ extension MediaQueryExtension on BuildContext {
 }
 
 extension NavigationExtension on BuildContext {
-  void push(String routeName, {Object? arg}) {
-    sl<AppRouter>()
+  Future<T?> push<T>(String routeName, {Object? arg}) {
+    return sl<AppRouter>()
         .navigatorKey
         .currentState!
-        .pushNamed(routeName, arguments: arg);
+        .pushNamed(routeName, arguments: arg) as Future<T?>;
     // Navigator.of(this).pushNamed(routeName, arguments: arg);
     // Navigator.pushNamed(this, routeName,arguments: arg);
   }
