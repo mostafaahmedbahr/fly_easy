@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -159,6 +160,13 @@ Future<void> main() async {
   await EasyLocalization.ensureInitialized();
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  try {
+    await FirebaseAuth.instance.signInAnonymously();
+    if (kDebugMode) print('Firebase Auth: Signed in anonymously');
+  } catch (e) {
+    if (kDebugMode) print('Firebase Auth: Anonymous sign-in failed: $e');
+  }
 
   // AppSettings.openAppSettings(type: AppSettingsType.settings, asAnotherTask: true);
 
