@@ -60,34 +60,26 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _bannerAd = BannerAd(
       size: AdSize.fullBanner,
       adUnitId: AdMobService.bannerAdUnitId!,
-      listener: BannerAdListener(
-        onAdFailedToLoad: (ad, error) {
-          if (kDebugMode) {
-            print(error.message);
-            print(error.responseInfo);
-            print(
-              'Failed//////////////////////////////////////////////////////',
-            );
-          }
-          ad.dispose();
-        },
-        onAdClosed: (ad) {
-          if (kDebugMode) {
-            print(
-              'Closed//////////////////////////////////////////////////////////',
-            );
-          }
-          ad.dispose();
-        },
-        onAdLoaded: (ad) {
-          if (kDebugMode) {
-            print('Loaded');
-          }
-          setState(() {
-            _bannerAdLoaded = true;
-          });
-        },
-      ),
+        listener: BannerAdListener(
+          onAdFailedToLoad: (ad, error) {
+            if (kDebugMode) {
+              print(error.message);
+              print(error.responseInfo);
+              print(
+                'Failed//////////////////////////////////////////////////////',
+              );
+            }
+            ad.dispose();
+          },
+          onAdLoaded: (ad) {
+            if (kDebugMode) {
+              print('Loaded');
+            }
+            setState(() {
+              _bannerAdLoaded = true;
+            });
+          },
+        ),
       request: const AdRequest(),
     )..load();
   }
@@ -101,16 +93,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // if (_bannerAdLoaded)
-            //   Padding(
-            //     padding: EdgeInsets.only(bottom: 10.h),
-            //     child: SizedBox(
-            //         width: AdSize.fullBanner.width.toDouble(),
-            //         height: AdSize.fullBanner.height.toDouble(),
-            //         child: AdWidget(ad: _bannerAd!)),
-            //   )
-            // else
-            SizedBox(height: 12.h),
+            // (_bannerAdLoaded)
+            //     ? Padding(
+            //         padding: EdgeInsets.only(bottom: 10.h),
+            //         child: SizedBox(
+            //             width: AdSize.fullBanner.width.toDouble(),
+            //             height: AdSize.fullBanner.height.toDouble(),
+            //             child: AdWidget(ad: _bannerAd!)),
+            //       )
+            //     : SizedBox(height: 12.h),
 
             HomeSliderImages(),
             // Padding(
@@ -166,6 +157,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _chatsPagingController.dispose();
+    _bannerAd?.dispose();
     super.dispose();
   }
 

@@ -155,7 +155,12 @@ Future<void> main() async {
     overlays: [SystemUiOverlay.bottom, SystemUiOverlay.top],
   );
 
-  MobileAds.instance.initialize();
+  try {
+    await MobileAds.instance.initialize();
+    if (kDebugMode) print('MobileAds initialized successfully');
+  } catch (e) {
+    if (kDebugMode) print('MobileAds initialization failed: $e');
+  }
 
   await EasyLocalization.ensureInitialized();
 

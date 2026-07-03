@@ -28,6 +28,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }
 
   @override
+  void dispose() {
+    _bannerAd?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return BlocBuilder<GlobalAppCubit, GlobalAppState>(
       builder: (context, state) => Scaffold(
@@ -41,16 +47,15 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     LocaleKeys.adv_space.tr(),
                     style: Theme.of(context).textTheme.titleLarge!.copyWith(fontSize: 14.sp),
                   )),
-              // if (_bannerAdLoaded)
-              //   Padding(
-              //     padding: EdgeInsets.only(bottom: 10.h),
-              //     child: SizedBox(
-              //         width: AdSize.fullBanner.width.toDouble(),
-              //         height: AdSize.fullBanner.height.toDouble(),
-              //         child: AdWidget(ad: _bannerAd!)),
-              //   )
-              // else
-              //    SizedBox(height: 15.h,),
+              (_bannerAdLoaded)
+                  ? Padding(
+                      padding: EdgeInsets.only(bottom: 10.h),
+                      child: SizedBox(
+                          width: AdSize.fullBanner.width.toDouble(),
+                          height: AdSize.fullBanner.height.toDouble(),
+                          child: AdWidget(ad: _bannerAd!)),
+                    )
+                  : SizedBox(height: 15.h),
               const Expanded(child: SectionsView()),
             ],
           )),
@@ -83,13 +88,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
               print(error.responseInfo);
               print(
                   'Failed//////////////////////////////////////////////////////');
-            }
-            ad.dispose();
-          },
-          onAdClosed: (ad) {
-            if (kDebugMode) {
-              print(
-                  'Closed//////////////////////////////////////////////////////////');
             }
             ad.dispose();
           },

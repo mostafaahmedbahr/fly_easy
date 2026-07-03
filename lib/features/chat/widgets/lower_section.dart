@@ -37,8 +37,9 @@ class _LowerSectionState extends State<LowerSection> {
   }
   @override
   void dispose() {
-    super.dispose();
+    _bannerAd?.dispose();
     _controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -154,9 +155,6 @@ class _LowerSectionState extends State<LowerSection> {
         adUnitId: AdMobService.bannerAdUnitId!,
         listener: BannerAdListener(
           onAdFailedToLoad: (ad, error) {
-            ad.dispose();
-          },
-          onAdClosed: (ad) {
             ad.dispose();
           },
           onAdLoaded: (ad) {

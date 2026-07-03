@@ -203,13 +203,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             }
             ad.dispose();
           },
-          onAdClosed: (ad) {
-            if (kDebugMode) {
-              print(
-                  'Closed//////////////////////////////////////////////////////////');
-            }
-            ad.dispose();
-          },
           onAdLoaded: (ad) {
             if (kDebugMode) {
               print('Loaded');
