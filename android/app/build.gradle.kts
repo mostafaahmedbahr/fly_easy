@@ -16,7 +16,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.zerobugs.teamsapp"
+    namespace = "com.flyeasy.teamlayered"
     compileSdk = 36
 
     ndkVersion = "27.0.12077973"
@@ -32,7 +32,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.zerobugs.teamsapp"
+        applicationId = "com.flyeasy.teamlayered"
         minSdk = 24
         targetSdk = 35
         versionCode = flutter.versionCode

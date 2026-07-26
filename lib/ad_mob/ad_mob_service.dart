@@ -15,22 +15,12 @@ class AdMobService {
     if (kDebugMode) {
       return Platform.isAndroid ? _androidBannerTest : _iosBannerTest;
     }
-    if(Platform.isAndroid){
-      return 'ca-app-pub-8718188273675259/7569025252';
-    }else if(Platform.isIOS){
-      return 'ca-app-pub-8718188273675259/1719283847';
-    }
-    return null;
+    return 'ca-app-pub-8718188273675259/2872844372';
   }
 
   static String? get interstitialAdUnitId {
     if (kDebugMode) {
       return Platform.isAndroid ? _androidInterstitialTest : _iosInterstitialTest;
-    }
-    if(Platform.isAndroid){
-      return 'ca-app-pub-8718188273675259/8692290229';
-    }else if(Platform.isIOS){
-      return 'ca-app-pub-8718188273675259/7762351931';
     }
     return null;
   }
@@ -39,32 +29,26 @@ class AdMobService {
     if (kDebugMode) {
       return Platform.isAndroid ? _androidRewardedTest : _iosRewardedTest;
     }
-    if(Platform.isAndroid){
-      return 'ca-app-pub-5231374671199362/5715079611';
-    }else if(Platform.isIOS){
-      return '';
-    }
     return null;
   }
 
   static void createBannerAd(void Function(Ad)? onAdLoaded) {
+    final adUnitId = bannerAdUnitId;
+    if (adUnitId == null || adUnitId.isEmpty) {
+      if (kDebugMode) print('AdMob: banner ad unit ID is null or empty');
+      return;
+    }
     BannerAd(
         size: AdSize.fullBanner,
-        adUnitId: bannerAdUnitId!,
+        adUnitId: adUnitId,
         listener: BannerAdListener(
           onAdFailedToLoad: (ad, error) {
             if (kDebugMode) {
-              print(error.message);
-              print(error.responseInfo);
-              print(
-                  'Failed//////////////////////////////////////////////////////');
+              print('AdMob banner failed: ${error.message}');
             }
             ad.dispose();
           },
           onAdClosed: (ad) {
-            if (kDebugMode) {
-              print('Closed//////////////////////////////////////////////////////////');
-            }
             ad.dispose();
           },
           onAdLoaded: onAdLoaded,

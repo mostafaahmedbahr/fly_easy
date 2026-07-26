@@ -147,7 +147,6 @@ Future<void> main() async {
   await HiveInitializer.initializeHive();
 
   DioHelper.init();
-  await openDisplayPermission();
 
   SystemChrome.setEnabledSystemUIMode(
     SystemUiMode.manual,
@@ -155,16 +154,46 @@ Future<void> main() async {
     overlays: [SystemUiOverlay.bottom, SystemUiOverlay.top],
   );
 
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  Bloc.observer = MyBlocObserver();
+
+  runApp(
+    EasyLocalization(
+      supportedLocales: const [
+        Locale('en'),
+
+        Locale('ar'),
+
+        Locale('fr'),
+
+        Locale('de'),
+
+        Locale('es'),
+      ],
+
+      path: 'assets/translations',
+
+      fallbackLocale: const Locale('en'),
+
+      startLocale: const Locale('en'),
+
+      child: const MyApp(),
+    ),
+  );
+
+  FlutterNativeSplash.remove();
+
+  _initBackgroundServices();
+}
+
+Future<void> _initBackgroundServices() async {
   try {
     await MobileAds.instance.initialize();
     if (kDebugMode) print('MobileAds initialized successfully');
   } catch (e) {
     if (kDebugMode) print('MobileAds initialization failed: $e');
   }
-
-  await EasyLocalization.ensureInitialized();
-
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   try {
     await FirebaseAuth.instance.signInAnonymously();
@@ -173,30 +202,27 @@ Future<void> main() async {
     if (kDebugMode) print('Firebase Auth: Anonymous sign-in failed: $e');
   }
 
-  // AppSettings.openAppSettings(type: AppSettingsType.settings, asAnotherTask: true);
+  try {
+    await FirebaseMessaging.instance.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
 
-  // // AppSettings.openAppSettings(
-
-  //
-
-  // );
-
-  // Get token with error handling
-
-  String? token = await FirebaseMessaging.instance.getToken();
-
-  if (token == null) {
-    if (kDebugMode)
-      print('Failed to get FCM token - check Google Play Services');
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      await FirebaseMessaging.instance.getAPNSToken();
+    }
+    final token = await FirebaseMessaging.instance.getToken();
+    if (token == null && kDebugMode) {
+      print('Failed to get FCM token');
+    }
+  } catch (e) {
+    if (kDebugMode) print('FCM token retrieval error: $e');
   }
 
-  initializeDateFormatting();
+  await initializeDateFormatting();
 
-  Future.delayed(
-    const Duration(milliseconds: 1500),
-
-    () => FlutterNativeSplash.remove(),
-  );
+  await openDisplayPermission();
 
   ZegoUIKit().initLog().then((value) {
 
@@ -232,11 +258,6 @@ Future<void> main() async {
         ),
       ),
 
-      // androidNotificationConfig: ZegoAndroidNotificationConfig(
-
-      //   sound: "zego_incoming",
-
-      // ),
       appID: 1812799240 /*input your AppID*/,
 
       appSign:
@@ -286,10 +307,8 @@ Future<void> main() async {
         },
       ),
 
-      // controller: zegoUIKitPrebuiltCallController,
       plugins: [ZegoUIKitSignalingPlugin()],
 
-      // notifyWhenAppRunningInBackgroundOrQuit: true,
       ringtoneConfig: ZegoCallRingtoneConfig(
         incomingCallPath: "assets/sounds/ringTone.mp3",
       ),
@@ -313,30 +332,4 @@ Future<void> main() async {
       },
     );
   }
-
-  Bloc.observer = MyBlocObserver();
-
-  runApp(
-    EasyLocalization(
-      supportedLocales: const [
-        Locale('en'),
-
-        Locale('ar'),
-
-        Locale('fr'),
-
-        Locale('de'),
-
-        Locale('es'),
-      ],
-
-      path: 'assets/translations',
-
-      fallbackLocale: const Locale('en'),
-
-      startLocale: const Locale('en'),
-
-      child: const MyApp(),
-    ),
-  );
 }
