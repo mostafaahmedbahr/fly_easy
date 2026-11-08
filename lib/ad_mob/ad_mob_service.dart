@@ -4,32 +4,24 @@ import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class AdMobService {
-  static const String _androidBannerTest = 'ca-app-pub-8718188273675259/7229664422';
-  static const String _iosBannerTest = 'ca-app-pub-8718188273675259/4216754205';
+  // static const String _androidBannerTest = 'ca-app-pub-8718188273675259/7229664422';
+  // static const String _iosBannerTest = 'ca-app-pub-8718188273675259/4216754205';
   // static const String _androidInterstitialTest = 'ca-app-pub-3940256099942544/1033173712';
   // static const String _iosInterstitialTest = 'ca-app-pub-3940256099942544/4411468910';
   // static const String _androidRewardedTest = 'ca-app-pub-3940256099942544/5224354917';
   // static const String _iosRewardedTest = 'ca-app-pub-3940256099942544/1712485313';
 
   static String? get bannerAdUnitId {
-    if (kDebugMode) {
       return Platform.isAndroid ? "ca-app-pub-8718188273675259/7810087030" : "ca-app-pub-8718188273675259/7741979284";
-    }
-    return 'ca-app-pub-8718188273675259/2872844372';
   }
 
   static String? get interstitialAdUnitId {
-    if (kDebugMode) {
       return Platform.isAndroid ? "ca-app-pub-8718188273675259/7810087030" : "ca-app-pub-8718188273675259/7741979284";
-    }
-    return null;
   }
 
   static String? get rewardedAdUnitId {
-    if (kDebugMode) {
       return Platform.isAndroid ? "ca-app-pub-8718188273675259/7810087030" : "ca-app-pub-8718188273675259/7741979284";
-    }
-    return null;
+
   }
 
   static void createBannerAd(void Function(Ad)? onAdLoaded) {
