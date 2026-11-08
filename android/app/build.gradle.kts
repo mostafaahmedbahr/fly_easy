@@ -16,7 +16,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.flyeasy.teamlayered"
+    namespace = "com.zerobugs.teamsapp"
     compileSdk = 36
 
     ndkVersion = "27.0.12077973"
@@ -32,26 +32,28 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.flyeasy.teamlayered"
+        applicationId = "com.zerobugs.teamsapp"
         minSdk = 24
         targetSdk = 35
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         multiDexEnabled = true
     }
+    val hasReleaseKeys = keystorePropertiesFile.exists()
     signingConfigs {
-        create("release") {
-            keyAlias = keystoreProperties["keyAlias"] as String
-            keyPassword = keystoreProperties["keyPassword"] as String
-            storeFile = keystoreProperties["storeFile"]?.let { file(it) }
-            storePassword = keystoreProperties["storePassword"] as String
+        if (hasReleaseKeys) {
+            create("release") {
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+                storeFile = keystoreProperties["storeFile"]?.let { file(it) }
+                storePassword = keystoreProperties["storePassword"] as String
+            }
         }
     }
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("release")
+            // Sign with debug keys when no key.properties keystore is present
+            signingConfig = if (hasReleaseKeys) signingConfigs.getByName("release") else signingConfigs.getByName("debug")
             isMinifyEnabled = true // أضف هذا
             isShrinkResources = true // أضف هذا
             proguardFiles(

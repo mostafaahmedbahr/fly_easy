@@ -13,7 +13,7 @@ class AdMobService {
 
   static String? get bannerAdUnitId {
     if (kDebugMode) {
-      return Platform.isAndroid ? _androidBannerTest : _iosBannerTest;
+      return Platform.isAndroid ? "ca-app-pub-8718188273675259/7810087030" : "ca-app-pub-8718188273675259/7741979284";
     }
     return 'ca-app-pub-8718188273675259/2872844372';
   }

@@ -98,7 +98,6 @@ dependencies:
   flutter_local_notifications: ^18.0.0
   mobile_scanner: ^7.0.1
   country_code_picker: ^3.4.0
-  font_awesome_flutter: ^10.9.1
   receive_sharing_intent: ^1.8.1
   showcaseview: ^4.0.1
   device_info_plus: ^11.5.0
@@ -139,6 +138,8 @@ dev_dependencies:
   flutter_launcher_icons: ^0.14.4
 dependency_overrides:
   intl: ^0.20.2
+  iconly:
+    path: third_party/iconly
 flutter_launcher_icons:
   android: true
   ios: true

@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:new_fly_easy_new/features/chat/bloc/chat_cubit.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class SeenWidget extends StatefulWidget {
   const SeenWidget({
@@ -49,7 +48,7 @@ class _SeenWidgetState extends State<SeenWidget> {
           visible: seen,
           replacement: const SizedBox.shrink(),
           child: Icon(
-            FontAwesomeIcons.checkDouble,
+            Icons.done_all,
             size: 15,
             color: widget.color ?? Colors.white,
           ),
